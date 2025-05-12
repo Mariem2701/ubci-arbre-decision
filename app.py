@@ -94,12 +94,14 @@ elif st.session_state.question_number == 6:
 elif st.session_state.question_number == 7:
     st.subheader("7️⃣ La dépense correspond-elle à des frais d’étude ?")
     choix = st.radio("Réponse :", ["Oui", "Non"], key="q7")
+
     if st.button("➡️ Suivant", key="b7"):
         st.session_state.history.append(("Q7", choix))
         if choix == "Oui":
-            next_question()  # Q8
+            next_question()  # aller à Q8
         else:
-            go_to_question(9)
+            st.session_state.question_number = 9  # aller directement à Q9
+
 
 # Question 8 - Frais d’étude
 elif st.session_state.question_number == 8:
