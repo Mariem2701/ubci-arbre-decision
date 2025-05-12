@@ -27,28 +27,101 @@ def reset():
 
 # Bouton pour recommencer depuis le début
 st.sidebar.button("🔄 Réinitialiser", on_click=reset)
+# Services disponibles
+services = [
+    "Demandeur",
+    "Comptabilité des immobilisations",
+    "Fournisseurs / Comptabilité",
+    "Achats",
+    "Contrôle de gestion",
+    "IT / Juridique",
+    "Services Généraux",
+    "RH"
+]
+service_connecte = st.selectbox("👤 Connecté en tant que :", services)
+
+# Dictionnaire des services responsables par question
+services_responsables = {
+    1: "Demandeur",
+    2: "Comptabilité des immobilisations",
+    3: "Demandeur",
+    4: "Contrôle de gestion",
+    5: "Contrôle de gestion",
+    6: "Achats",
+    7: "Demandeur",
+    8: "Comptabilité des immobilisations",
+    9: "Achats",
+    10: "Comptabilité des immobilisations",
+    11: "IT / Juridique",
+    12: "Comptabilité des immobilisations",
+    13: "Services Généraux",
+    14: "Services Généraux",
+    15: "Comptabilité des immobilisations",
+    16: "Demandeur",
+    17: "Contrôle de gestion",
+    18: "Contrôle de gestion",
+    19: "Comptabilité des immobilisations",
+    20: "IT / Juridique",
+    21: "IT",
+    22: "IT / Juridique",
+    23: "Achats",
+    24: "Comptabilité des fournisseurs",
+    25: "Comptabilité des immobilisations",
+    26: "IT / Juridique",
+    30: "IT",
+    31: "Comptabilité des fournisseurs",
+    32: "IT",
+    33: "IT",
+    34: "IT",
+}
+
+# Initialisation de la session
+if 'question_number' not in st.session_state:
+    st.session_state.question_number = 1
+if 'history' not in st.session_state:
+    st.session_state.history = []
+
+# Navigation
+def next_question():
+    st.session_state.question_number += 1
+
+def go_to_question(n):
+    st.session_state.question_number = n
+
+def reset():
+    st.session_state.question_number = 1
+    st.session_state.history = []
+
+st.sidebar.button("🔄 Réinitialiser", on_click=reset)
+
+# Fonction d'affichage du service responsable
+def afficher_service(question_num):
+    service = services_responsables.get(question_num)
+    if service:
+        st.markdown(f"👤 **Service concerné :** {service}")
+
+# Exemple d'affichage d'une question avec le service concerné
 if st.session_state.question_number == 1:
     st.subheader("1️⃣ La dépense est-elle supérieure à 500 DT ?")
-
+    afficher_service(1)
     choix = st.radio("Réponse :", ["Oui", "Non"], key="q1")
-
     if st.button("➡️ Suivant"):
         st.session_state.history.append(("Q1", choix))
-
         if choix == "Oui":
-            next_question()  # aller à la prochaine question
+            next_question()
         else:
             st.success("✅ Conclusion : Cette dépense est comptabilisée en **Charge**.")
-# Question 2
-elif st.session_state.question_number == 2:
+
+if st.session_state.question_number == 2:
     st.subheader("2️⃣ La dépense concerne-t-elle un bien physique et tangible ?")
+    afficher_service(2)
     choix = st.radio("Réponse :", ["Oui", "Non"], key="q2")
     if st.button("➡️ Suivant", key="b2"):
         st.session_state.history.append(("Q2", choix))
         if choix == "Oui":
             next_question()
         else:
-            go_to_question(15)  # Vers les incorporelles
+            go_to_question(15)
 
 # Question 3
 elif st.session_state.question_number == 3:
