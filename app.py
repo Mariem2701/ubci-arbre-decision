@@ -179,3 +179,173 @@ elif st.session_state.question_number == 14:
             st.success("✅ Conclusion : **Immobilisation corporelle**")
         else:
             st.success("✅ Conclusion : **Charge**")
+
+
+# Questions incorporelles
+if st.session_state.question_number == 15:
+    st.subheader("1️⃣5️⃣ L’élément est-il identifiable ?")
+    choix = st.radio("(Peut-il être séparé ou découle-t-il de droits légaux ?)", ["Oui", "Non"], key="q15")
+    if st.button("➡️ Suivant", key="b15"):
+        st.session_state.history.append(("Q15", choix))
+        if choix == "Oui":
+            next_question()
+        else:
+            st.success("✅ Conclusion : **Charge**")
+
+elif st.session_state.question_number == 16:
+    st.subheader("1️⃣6️⃣ Est-il destiné à être utilisé pour plus d'un exercice (> 1 an) ?")
+    choix = st.radio("", ["Oui", "Non"], key="q16")
+    if st.button("➡️ Suivant", key="b16"):
+        st.session_state.history.append(("Q16", choix))
+        if choix == "Oui":
+            next_question()
+        else:
+            st.success("✅ Conclusion : **Charge**")
+
+elif st.session_state.question_number == 17:
+    st.subheader("1️⃣7️⃣ L'entreprise contrôle-t-elle l'élément et en retire-t-elle des avantages économiques futurs probables ?")
+    choix = st.radio("", ["Oui", "Non"], key="q17")
+    if st.button("➡️ Suivant", key="b17"):
+        st.session_state.history.append(("Q17", choix))
+        if choix == "Oui":
+            next_question()
+        else:
+            st.success("✅ Conclusion : **Charge**")
+
+elif st.session_state.question_number == 18:
+    st.subheader("1️⃣8️⃣ Le coût peut-il être mesuré de manière fiable ?")
+    choix = st.radio("", ["Oui", "Non"], key="q18")
+    if st.button("➡️ Suivant", key="b18"):
+        st.session_state.history.append(("Q18", choix))
+        if choix == "Oui":
+            next_question()
+        else:
+            st.success("✅ Conclusion : **Charge**")
+
+elif st.session_state.question_number == 19:
+    st.subheader("1️⃣9️⃣ S'agit-il d'une acquisition, création en interne ou d'une dépense liée à un actif ?")
+    choix = st.radio("", ["Acquisition", "Création en interne", "Dépense liée à un actif"], key="q19")
+    if st.button("➡️ Suivant", key="b19"):
+        st.session_state.history.append(("Q19", choix))
+        if choix == "Acquisition":
+            go_to_question(20)
+        elif choix == "Création en interne":
+            go_to_question(25)
+        else:
+            go_to_question(30)
+
+# Branche Acquisition
+elif st.session_state.question_number == 20:
+    st.subheader("🔹 L'acquisition concerne-t-elle une licence ?")
+    choix = st.radio("", ["Oui", "Non"], key="q20")
+    if st.button("➡️ Suivant", key="b20"):
+        if choix == "Oui":
+            next_question()
+        else:
+            st.success("✅ Conclusion : **Immobilisation incorporelle**")
+
+elif st.session_state.question_number == 21:
+    st.subheader("🔹 L'actif est-il hébergé sur une infrastructure contrôlée par l'entreprise ?")
+    choix = st.radio("", ["Oui", "Non"], key="q21")
+    if st.button("➡️ Suivant", key="b21"):
+        if choix == "Oui":
+            next_question()
+        else:
+            st.success("✅ Conclusion : **Charge**")
+
+elif st.session_state.question_number == 22:
+    st.subheader("🔹 L’entreprise dispose-t-elle d’un droit d’usage distinct et exclusif de l'actif ?")
+    choix = st.radio("", ["Oui", "Non"], key="q22")
+    if st.button("➡️ Suivant", key="b22"):
+        if choix == "Oui":
+            next_question()
+        else:
+            st.success("✅ Conclusion : **Charge**")
+
+elif st.session_state.question_number == 23:
+    st.subheader("🔹 Le droit d’usage est-il permanent (licence perpétuelle) ou à long terme (≥ 3 ans) ?")
+    choix = st.radio("", ["Oui", "Non"], key="q23")
+    if st.button("➡️ Suivant", key="b23"):
+        if choix == "Oui":
+            next_question()
+        else:
+            st.success("✅ Conclusion : **Charge**")
+
+elif st.session_state.question_number == 24:
+    st.subheader("🔹 Le contrat prévoit-il un abonnement/paiement récurrent ?")
+    choix = st.radio("", ["Oui", "Non"], key="q24")
+    if st.button("➡️ Suivant", key="b24"):
+        if choix == "Oui":
+            st.success("✅ Conclusion : **Charge**")
+        else:
+            st.success("✅ Conclusion : **Immobilisation incorporelle**")
+
+# Branche Création Interne
+elif st.session_state.question_number == 25:
+    st.subheader("🧪 S'agit-il de dépenses de recherche ou de développement ?")
+    choix = st.radio("", ["Recherche", "Développement"], key="q25")
+    if st.button("➡️ Suivant", key="b25"):
+        if choix == "Recherche":
+            st.success("✅ Conclusion : **Charge**")
+        else:
+            next_question()
+
+elif st.session_state.question_number == 26:
+    st.subheader("🧪 Les conditions IAS 38.57 sont-elles toutes remplies ?")
+    conditions = st.checkbox("Faisabilité technique") and \
+                 st.checkbox("Intention d’achever le projet") and \
+                 st.checkbox("Capacité à utiliser ou vendre l'actif") and \
+                 st.checkbox("Avantages économiques futurs probables") and \
+                 st.checkbox("Ressources disponibles") and \
+                 st.checkbox("Dépenses évaluées de façon fiable")
+    if st.button("➡️ Suivant", key="b26"):
+        if conditions:
+            st.success("✅ Conclusion : **Immobilisation incorporelle**")
+        else:
+            st.success("✅ Conclusion : **Charge**")
+
+# Branche Dépenses liées à un actif
+elif st.session_state.question_number == 30:
+    st.subheader("🔧 S'agit-il d'une dépense de maintenance ?")
+    choix = st.radio("", ["Oui", "Non"], key="q30")
+    if st.button("➡️ Suivant", key="b30"):
+        if choix == "Oui":
+            go_to_question(32)
+        else:
+            go_to_question(31)
+
+elif st.session_state.question_number == 31:
+    st.subheader("🔧 La dépense est-elle directement attribuable à la préparation de l'actif ?")
+    choix = st.radio("", ["Oui", "Non"], key="q31")
+    if st.button("➡️ Suivant", key="b31"):
+        if choix == "Oui":
+            st.success("✅ Conclusion : **Immobilisation corporelle**")
+        else:
+            st.success("✅ Conclusion : **Charge**")
+
+elif st.session_state.question_number == 32:
+    st.subheader("🔧 La dépense est-elle réalisée avant ou après la mise en service de l’actif ?")
+    choix = st.radio("", ["Avant", "Après"], key="q32")
+    if st.button("➡️ Suivant", key="b32"):
+        if choix == "Après":
+            go_to_question(33)
+        else:
+            go_to_question(34)
+
+elif st.session_state.question_number == 33:
+    st.subheader("🔧 La maintenance est-elle évolutive ou corrective ?")
+    choix = st.radio("", ["Évolutive", "Corrective"], key="q33")
+    if st.button("➡️ Suivant", key="b33"):
+        if choix == "Évolutive":
+            st.success("✅ Conclusion : **Immobilisation corporelle**")
+        else:
+            st.success("✅ Conclusion : **Charge**")
+
+elif st.session_state.question_number == 34:
+    st.subheader("🔧 Cette dépense est-elle nécessaire pour rendre l’actif opérationnel ?")
+    choix = st.radio("", ["Oui", "Non"], key="q34")
+    if st.button("➡️ Suivant", key="b34"):
+        if choix == "Oui":
+            st.success("✅ Conclusion : **Immobilisation corporelle**")
+        else:
+            st.success("✅ Conclusion : **Charge**")
