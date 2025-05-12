@@ -171,4 +171,3 @@ elif st.session_state.step == 35:
         show_result("success", "Immobilisation Corporelle")
     else:
         show_result("error", "Charge")
-
