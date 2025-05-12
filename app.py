@@ -17,6 +17,10 @@ if 'history' not in st.session_state:
 def next_question():
     st.session_state.question_number += 1
 
+def go_to_question(n):
+    st.session_state.question_number = n
+
+
 def reset():
     st.session_state.question_number = 1
     st.session_state.history = []
