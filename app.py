@@ -7,6 +7,12 @@ st.set_page_config(page_title="UBCI - Arbre de Décision Immobilisation", layout
 st.title("🔍 Arbre de Décision - Traitement des Dépenses (Banque UBCI)")
 st.markdown("Bienvenue dans l'outil interactif d’aide à la décision pour la classification des dépenses selon les normes de la Banque **UBCI**.")
 
+from PIL import Image
+
+# Chargement et affichage du logo
+logo = Image.open("/mnt/data/1d9dd23e-6597-49d2-a7d2-6973274f5fc6.png")
+st.image(logo, width=150)
+
 # Initialisation de la session
 if 'question_number' not in st.session_state:
     st.session_state.question_number = 1
@@ -80,6 +86,24 @@ def afficher_service(question_num):
     service = services_responsables.get(question_num)
     if service:
         st.markdown(f"👤 **Service concerné :** {service}")
+
+
+def afficher_question(num, titre, texte, options, key_radio, bouton_key, suite_callback):
+    if service_connecte == services_responsables.get(num) or service_connecte == "Comptabilité des immobilisations":
+        with st.container():
+            st.subheader(titre)
+            afficher_service(num)
+            choix = st.radio(texte, options, key=key_radio)
+            if st.button("➡️ Suivant", key=bouton_key):
+                st.session_state.history.append((f"Q{num}", choix))
+                suite_callback(choix)
+    else:
+        st.warning("⛔ Cette question ne concerne pas votre service.")
+
+if service_connecte == "Comptabilité des immobilisations":
+    with st.expander("📋 Suivi de l’avancement des réponses"):
+        for question, reponse in st.session_state.history:
+            st.markdown(f"**{question}** : {reponse}")
 
 # Exemple de première question
 if st.session_state.question_number == 1:
