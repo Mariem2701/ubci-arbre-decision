@@ -182,7 +182,7 @@ elif st.session_state.question_number == 14:
 
 
 # Questions incorporelles
-if st.session_state.question_number == 15:
+elif st.session_state.question_number == 15:
     st.subheader("1️⃣5️⃣ L’élément est-il identifiable ?")
     choix = st.radio("(Peut-il être séparé ou découle-t-il de droits légaux ?)", ["Oui", "Non"], key="q15")
     if st.button("➡️ Suivant", key="b15"):
