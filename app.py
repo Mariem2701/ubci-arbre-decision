@@ -108,7 +108,8 @@ if service_connecte == "Comptabilité des immobilisations":
         for question, reponse in st.session_state.history:
             st.markdown(f"**{question}** : {reponse}")
 
-# ✅ Exemple de mise en œuvre pour la première question
+
+# Question 1
 if st.session_state.question_number == 1:
     def suite_q1(choix):
         if choix == "Oui":
@@ -117,8 +118,7 @@ if st.session_state.question_number == 1:
             st.success("✅ Conclusion : Cette dépense est comptabilisée en **Charge**.")
     afficher_question(1, "1️⃣ La dépense est-elle supérieure à 500 DT ?", "Réponse :", ["Oui", "Non"], "q1", "b1", suite_q1)
 
-# ✅ Ensuite vous continuez avec le même modèle pour chaque question :
-# Exemple simplifié (à adapter pour chaque question du 2 à 34 en copiant ce pattern)
+# Question 2
 elif st.session_state.question_number == 2:
     def suite_q2(choix):
         if choix == "Oui":
