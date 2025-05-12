@@ -48,10 +48,6 @@ st.markdown('<div class="subtitle">UBCI • Arbre de Décision Automatisé</div>
 if "step" not in st.session_state:
     st.session_state.step = 1
 
-col1, col2 = st.columns([1, 3])
-with col2:
-    if st.button("🔄 Recommencer"):
-        st.session_state.step = 1
 
 def question_box(label, options):
     st.markdown('<div class="question-box">', unsafe_allow_html=True)
@@ -295,3 +291,8 @@ elif st.session_state.step == 35:
         show_result("success", "Immobilisation corporelle")
     else:
         show_result("error", "Charge")
+
+col1, col2 = st.columns([1, 3])
+with col2:
+    if st.button("🔄 Recommencer"):
+        st.session_state.step = 1
