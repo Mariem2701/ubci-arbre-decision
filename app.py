@@ -31,7 +31,7 @@ st.markdown("Bienvenue dans l'outil interactif d’aide à la décision pour la 
 service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services)
 
 # Vérification de l'ID de session dans l'URL
-query_params = st.experimental_get_query_params()
+query_params = st.query_params
 session_id = query_params.get("id", [None])[0]
 
 # Création d'une nouvelle session (par Comptabilité des immo)
