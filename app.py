@@ -101,7 +101,6 @@ services = [
     "Services Généraux",
     "RH"
 ]
-service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services)
 
 # Navigation
 def next_question():
