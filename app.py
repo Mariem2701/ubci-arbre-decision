@@ -3,8 +3,29 @@ from PIL import Image
 import os
 import uuid
 import json
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+from datetime import datetime
 
-# Services disponibles
+
+def get_google_sheet():
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+    client = gspread.authorize(creds)
+    return client.open("ubci_decision_data").sheet1
+
+sheet = get_google_sheet()
+
+
+def enregistrer_reponse(session_id, intitule, description, service, question_id, reponse):
+    horodatage = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ligne = [session_id, intitule, description, service, question_id, reponse, horodatage]
+    try:
+        sheet.append_row(ligne)
+    except Exception as e:
+        st.error(f"Erreur lors de l'enregistrement dans Google Sheets : {e}")
+
+
 services = [
     "Demandeur",
     "Comptabilité des immobilisations",
@@ -16,10 +37,8 @@ services = [
     "RH"
 ]
 
-# Configuration de la page
 st.set_page_config(page_title="UBCI - Arbre de Décision Immobilisation", layout="centered")
 
-# Affichage du logo
 try:
     logo = Image.open("./ubci_logo.png")
     st.image(logo, width=150)
@@ -31,13 +50,15 @@ st.markdown("Bienvenue dans l'outil interactif d’aide à la décision pour la 
 
 service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services)
 
-# Vérification de l'ID de session dans l'URL
+if 'history' not in st.session_state:
+    st.session_state.history = []
+if 'question_number' not in st.session_state:
+    st.session_state.question_number = 1
+
 query_params = st.query_params
 session_id = query_params.get("id", [None])[0]
-
 data_init = {}
 
-# Création d'une nouvelle session
 if not session_id:
     if service_connecte == "Comptabilité des immobilisations":
         st.header("Créer une nouvelle demande")
@@ -67,19 +88,13 @@ else:
         with open(filepath, "r") as f:
             data = json.load(f)
         data_init.update(data)
-        if 'question_number' not in st.session_state:
-            st.session_state.question_number = data.get("question_number", 1)
-        if 'history' not in st.session_state:
-            st.session_state.history = data.get("history", [])
+        st.session_state.question_number = data.get("question_number", 1)
+        st.session_state.history = data.get("history", [])
     else:
         st.error("❌ Lien invalide ou session expirée.")
         st.stop()
 
-def reset():
-    st.session_state.question_number = 1
-    st.session_state.history = []
-
-st.sidebar.button("🔄 Réinitialiser", on_click=reset)
+st.sidebar.button("🔄 Réinitialiser", on_click=lambda: (st.session_state.update({"question_number": 1, "history": []})))
 
 def next_question():
     st.session_state.question_number += 1
@@ -96,6 +111,16 @@ def sauvegarder():
     }
     with open(f"data/{session_id}.json", "w") as f:
         json.dump(data, f)
+    if st.session_state.history:
+        last_qid, last_rep = st.session_state.history[-1]
+        enregistrer_reponse(
+            session_id,
+            data.get("intitule", ""),
+            data.get("description", ""),
+            service_connecte,
+            last_qid,
+            last_rep
+        )
 
 libelles_questions = {
     1: "La dépense est-elle supérieure à 500 DT ?",
@@ -124,6 +149,9 @@ libelles_questions = {
     24: "Le contrat prévoit-il un abonnement/paiement récurrent ?",
     25: "S'agit-il de dépenses de recherche ou de développement ?",
     26: "Les conditions IAS 38.57 sont-elles toutes remplies ?",
+    27: "Cette dépense est-elle soumise à une approbation réglementaire ?",
+    28: "Y a-t-il un impact sur les états financiers ?",
+    29: "La dépense est-elle liée à un projet stratégique ?",
     30: "S'agit-il d'une dépense de maintenance ?",
     31: "La dépense est-elle directement attribuable à la préparation de l'actif ?",
     32: "La dépense est-elle réalisée avant ou après la mise en service de l’actif ?",
@@ -131,19 +159,30 @@ libelles_questions = {
     34: "Cette dépense est-elle nécessaire pour rendre l’actif opérationnel ?",
 }
 
-# Affichage des données
 st.markdown("## 📝 Demande en cours")
 st.markdown(f"**📌 Intitulé :** {data_init.get('intitule', 'Non renseigné')}")
 if data_init.get("description"):
     st.markdown(f"**🗒️ Description :** {data_init.get('description')}")
 
-# Historique visible uniquement par SCI
 if service_connecte == "Comptabilité des immobilisations" and st.session_state.history:
     st.markdown("### 📚 Historique des réponses")
     for qid, rep in st.session_state.history:
         qnum = int(qid.replace("Q", ""))
         libelle = libelles_questions.get(qnum, f"Question {qnum}")
         st.markdown(f"- **{libelle}** → **{rep}**")
+
+if st.session_state.question_number == 1:
+    st.markdown("---")
+    st.subheader("1️⃣ La dépense est-elle supérieure à 500 DT ?")
+    choix = st.radio("Réponse :", ["Oui", "Non"], key="q1")
+    if st.button("➡️ Suivant", key="b1"):
+        st.session_state.history.append(("Q1", choix))
+        sauvegarder()
+        if choix == "Non":
+            st.success("✅ Conclusion : Charge")
+        else:
+            next_question()
+            st.experimental_rerun()
 
 
 elif st.session_state.question_number == 2:
