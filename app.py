@@ -65,6 +65,7 @@ if not session_id:
 else:
    # Chargement de la session existante (version robuste)
 filepath = f"data/{session_id}.json"
+
 if os.path.exists(filepath):
     with open(filepath, "r") as f:
         data = json.load(f)
