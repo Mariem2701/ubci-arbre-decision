@@ -3,8 +3,11 @@ from PIL import Image
 import os
 import uuid
 import json
+from datetime import datetime
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
-
+# Connexion à Google Sheets
 def get_google_sheet():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
@@ -12,7 +15,6 @@ def get_google_sheet():
     return client.open("ubci_decision_data").sheet1
 
 sheet = get_google_sheet()
-
 
 # Services disponibles
 services = [
@@ -88,9 +90,8 @@ else:
         st.error("❌ Lien invalide ou session expirée.")
         st.stop()
 
-# Fonction pour réinitialiser
-st.sidebar.button("🔄 Réinitialiser", on_click=lambda: (st.session_state.update({"question_number": 1, "history": []})))
-
+# Réinitialisation
+st.sidebar.button("🔄 Réinitialiser", on_click=lambda: st.session_state.update({"question_number": 1, "history": []}))
 
 def next_question():
     st.session_state.question_number += 1
@@ -107,17 +108,24 @@ def sauvegarder():
     }
     with open(f"data/{session_id}.json", "w") as f:
         json.dump(data, f)
-
-   if st.session_state.history:
+    if st.session_state.history:
         last_qid, last_rep = st.session_state.history[-1]
         enregistrer_reponse(
             session_id,
-            data.get("intitule", ""),
-            data.get("description", ""),
+            data["intitule"],
+            data["description"],
             service_connecte,
             last_qid,
             last_rep
         )
+
+def enregistrer_reponse(session_id, intitule, description, service, question_id, reponse):
+    horodatage = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ligne = [session_id, intitule, description, service, question_id, reponse, horodatage]
+    try:
+        sheet.append_row(ligne)
+    except Exception as e:
+        st.error(f"Erreur lors de l'enregistrement dans Google Sheets : {e}")
 
 
 libelles_questions = {
