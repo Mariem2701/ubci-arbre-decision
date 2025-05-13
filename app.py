@@ -531,6 +531,16 @@ elif st.session_state.question_number == 34:
 if service_connecte == "Comptabilité des immobilisations" and "history" in st.session_state:
     if st.session_state.history:
         st.markdown("### 📚 Historique des réponses")
+
+
+def enregistrer_reponse(session_id, intitule, description, service, question_id, reponse):
+    horodatage = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ligne = [session_id, intitule, description, service, question_id, reponse, horodatage]
+    try:
+        sheet.append_row(ligne)
+    except Exception as e:
+        st.error(f"Erreur lors de l'enregistrement dans Google Sheets : {e}")
+
         for qid, rep in st.session_state.history:
             qnum = int(qid.replace("Q", ""))
             libelle = libelles_questions.get(qnum, f"Question {qnum}")
