@@ -14,11 +14,51 @@ except FileNotFoundError:
 st.title("🔍 Arbre de Décision - Traitement des Dépenses (Banque UBCI)")
 st.markdown("Bienvenue dans l'outil interactif d’aide à la décision pour la classification des dépenses selon les normes de la Banque **UBCI**.")
 
-# Initialisation
+service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services)
+
+# Vérification de l'ID de session dans l'URL
+query_params = st.experimental_get_query_params()
+session_id = query_params.get("id", [None])[0]
+
+# Création d'une nouvelle session (par Comptabilité des immo)
+if not session_id:
+    if service_connecte == "Comptabilité des immobilisations":
+        st.header("Créer une nouvelle demande")
+        intitule = st.text_input("Intitulé de la dépense")
+        description = st.text_area("Description (optionnelle)")
+        if st.button("🎯 Créer la demande"):
+            session_id = str(uuid.uuid4())
+            data = {
+                "intitule": intitule,
+                "description": description,
+                "history": [],
+                "question_number": 1
+            }
+            os.makedirs("data", exist_ok=True)
+            with open(f"data/{session_id}.json", "w") as f:
+                json.dump(data, f)
+            st.success("✅ Demande créée !")
+            st.markdown(f"🔗 Voici le lien à partager :")
+            st.code(f"?id={session_id}")
+            st.stop()
+    else:
+        st.error("❌ Aucun ID de session fourni. Veuillez demander un lien à la comptabilité.")
+        st.stop()
+else:
+    # Chargement de la session existante
+    try:
+        with open(f"data/{session_id}.json", "r") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        st.error("❌ Lien invalide ou session expirée.")
+        st.stop()
+
+# Préparation des variables de session à partir du fichier
 if 'question_number' not in st.session_state:
-    st.session_state.question_number = 1
+    st.session_state.question_number = data.get("question_number", 1)
 if 'history' not in st.session_state:
-    st.session_state.history = []
+    st.session_state.history = data.get("history", [])
+
 
 # Bouton réinitialisation
 def reset():
@@ -46,6 +86,17 @@ def next_question():
 
 def go_to_question(n):
     st.session_state.question_number = n
+
+def sauvegarder():
+    data = {
+        "intitule": data_init.get("intitule", ""),
+        "description": data_init.get("description", ""),
+        "history": st.session_state.history,
+        "question_number": st.session_state.question_number
+    }
+    with open(f"data/{session_id}.json", "w") as f:
+        json.dump(data, f)
+
 
 # Services responsables
 services_responsables = {
