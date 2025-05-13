@@ -20,6 +20,18 @@ service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services
 query_params = st.experimental_get_query_params()
 session_id = query_params.get("id", [None])[0]
 
+# Définir les services en amont
+services = [
+    "Demandeur",
+    "Comptabilité des immobilisations",
+    "Fournisseurs / Comptabilité",
+    "Achats",
+    "Contrôle de gestion",
+    "IT / Juridique",
+    "Services Généraux",
+    "RH"
+]
+
 # Création d'une nouvelle session (par Comptabilité des immo)
 if not session_id:
     if service_connecte == "Comptabilité des immobilisations":
