@@ -63,15 +63,16 @@ if not session_id:
         st.error("❌ Aucun ID de session fourni. Veuillez demander un lien à la comptabilité.")
         st.stop()
 else:
-   # Chargement de la session existante (version robuste)
-filepath = f"data/{session_id}.json"
+    # Chargement de la session existante (version robuste)
+    filepath = f"data/{session_id}.json"
 
-if os.path.exists(filepath):
-    with open(filepath, "r") as f:
-        data = json.load(f)
-else:
-    st.error("❌ Lien invalide ou session expirée.")
-    st.stop()
+    if os.path.exists(filepath):
+        with open(filepath, "r") as f:
+            data = json.load(f)
+    else:
+        st.error("❌ Lien invalide ou session expirée.")
+        st.stop()
+
 
 
 # Stockage initial pour intitule/description
