@@ -4,6 +4,16 @@ import os
 import uuid
 import json
 
+
+def get_google_sheet():
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+    client = gspread.authorize(creds)
+    return client.open("ubci_decision_data").sheet1
+
+sheet = get_google_sheet()
+
+
 # Services disponibles
 services = [
     "Demandeur",
