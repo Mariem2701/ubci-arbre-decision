@@ -31,10 +31,15 @@ st.markdown("Bienvenue dans l'outil interactif d’aide à la décision pour la 
 
 service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services)
 
+# Initialisation sécurisée de session_state
+if 'history' not in st.session_state:
+    st.session_state.history = []
+if 'question_number' not in st.session_state:
+    st.session_state.question_number = 1
+
 # Vérification de l'ID de session dans l'URL
 query_params = st.query_params
 session_id = query_params.get("id", [None])[0]
-
 data_init = {}
 
 # Création d'une nouvelle session
@@ -67,19 +72,15 @@ else:
         with open(filepath, "r") as f:
             data = json.load(f)
         data_init.update(data)
-        if 'question_number' not in st.session_state:
-            st.session_state.question_number = data.get("question_number", 1)
-        if 'history' not in st.session_state:
-            st.session_state.history = data.get("history", [])
+        st.session_state.question_number = data.get("question_number", 1)
+        st.session_state.history = data.get("history", [])
     else:
         st.error("❌ Lien invalide ou session expirée.")
         st.stop()
 
-def reset():
-    st.session_state.question_number = 1
-    st.session_state.history = []
+# Fonction pour réinitialiser
+st.sidebar.button("🔄 Réinitialiser", on_click=lambda: (st.session_state.update({"question_number": 1, "history": []})))
 
-st.sidebar.button("🔄 Réinitialiser", on_click=reset)
 
 def next_question():
     st.session_state.question_number += 1
