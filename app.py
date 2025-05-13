@@ -69,11 +69,11 @@ else:
     if os.path.exists(filepath):
         with open(filepath, "r") as f:
             data = json.load(f)
+        data_init = data  # Réutilise directement les données chargées
     else:
         st.error("❌ Lien invalide ou session expirée.")
         st.stop()
-
-
+  
 
 # Stockage initial pour intitule/description
 data_init = data  # Réutilise le fichier déjà chargé
