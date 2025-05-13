@@ -516,3 +516,11 @@ elif st.session_state.question_number == 34:
     choix = st.radio("Réponse :", ['Oui', 'Non'], key="q34")
     if st.button("➡️ Suivant", key="b34"):
         suite_q34(choix)
+# Affichage de l'historique (visible uniquement par la Comptabilité des immobilisations)
+if service_connecte == "Comptabilité des immobilisations" and "history" in st.session_state:
+    if st.session_state.history:
+        st.markdown("### 📚 Historique des réponses")
+        for qid, rep in st.session_state.history:
+            qnum = int(qid.replace("Q", ""))
+            libelle = libelles_questions.get(qnum, f"Question {qnum}")
+            st.markdown(f"- **{libelle}** → **{rep}**")
