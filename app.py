@@ -1,4 +1,5 @@
 import streamlit as st
+import json
 from PIL import Image
 
 # Configuration de la page
