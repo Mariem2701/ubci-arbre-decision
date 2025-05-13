@@ -194,13 +194,13 @@ libelles_questions = {
     34: "Cette dépense est-elle nécessaire pour rendre l’actif opérationnel ?",
 }
 
-# Affichage historique si "Comptabilité des immobilisations"
-if service_connecte == "Comptabilité des immobilisations":
-    with st.expander("📋 Suivi de l’avancement des réponses"):
-        for question_key, reponse in st.session_state.history:
-            num = int(question_key.replace("Q", ""))
-            texte = libelles_questions.get(num, f"Question {num}")
-            st.markdown(f"**{texte}**\n➡️ Réponse : `{reponse}`")
+# Affichage global des détails de la demande (intitulé + description)
+st.markdown("## 📝 Demande en cours")
+st.markdown(f"**📌 Intitulé :** {data_init.get('intitule', 'Non renseigné')}")
+
+if data_init.get("description"):
+    st.markdown(f"**🗒️ Description :** {data_init.get('description')}")
+
 
 
 # Question 1
