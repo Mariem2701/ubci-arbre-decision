@@ -5,14 +5,19 @@ from PIL import Image
 st.set_page_config(page_title="UBCI - Arbre de Décision Immobilisation", layout="centered")
 
 
-service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services)
+# Services disponibles
+services = [
+    "Demandeur",
+    "Comptabilité des immobilisations",
+    "Fournisseurs / Comptabilité",
+    "Achats",
+    "Contrôle de gestion",
+    "IT / Juridique",
+    "Services Généraux",
+    "RH"
+]
 
 
-# Fonction pour afficher le service responsable
-def afficher_service(question_num):
-    service = services_responsables.get(question_num)
-    if service:
-        st.markdown(f"👤 **Service concerné :** {service}")
 # Affichage du logo
 try:
     logo = Image.open("./ubci_logo.png")
@@ -23,7 +28,7 @@ except FileNotFoundError:
 st.title("🔍 Arbre de Décision - Traitement des Dépenses (Banque UBCI)")
 st.markdown("Bienvenue dans l'outil interactif d’aide à la décision pour la classification des dépenses selon les normes de la Banque **UBCI**.")
 
-
+service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services)
 
 # Vérification de l'ID de session dans l'URL
 query_params = st.experimental_get_query_params()
@@ -82,18 +87,6 @@ def reset():
 
 st.sidebar.button("🔄 Réinitialiser", on_click=reset)
 
-# Services disponibles
-services = [
-    "Demandeur",
-    "Comptabilité des immobilisations",
-    "Fournisseurs / Comptabilité",
-    "Achats",
-    "Contrôle de gestion",
-    "IT / Juridique",
-    "Services Généraux",
-    "RH"
-]
-service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services)
 
 # Navigation
 def next_question():
@@ -148,7 +141,11 @@ services_responsables = {
     34: "IT",
 }
 
-
+# Fonction pour afficher le service responsable
+def afficher_service(question_num):
+    service = services_responsables.get(question_num)
+    if service:
+        st.markdown(f"👤 **Service concerné :** {service}")
 
 # Fonction d'affichage conditionnelle
 def afficher_question(num, titre, texte, options, key_radio, bouton_key, suite_callback):
