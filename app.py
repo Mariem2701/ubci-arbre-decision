@@ -36,6 +36,7 @@ service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services
 query_params = st.query_params
 session_id = query_params.get("id", [None])[0]
 
+data_init = {}  # Initialise toujours la variable, même si vide
 
 
 # Création d'une nouvelle session (par Comptabilité des immo)
@@ -71,7 +72,7 @@ else:
             data = json.load(f)
 
         # Stockage initial pour intitule/description
-        data_init = data
+        data_init.update(data)
 
         # Préparation des variables de session à partir du fichier
         if 'question_number' not in st.session_state:
