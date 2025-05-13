@@ -76,9 +76,8 @@ else:
 
 
 # Stockage initial pour intitule/description
-data_init = {}
-with open(f"data/{session_id}.json", "r") as f:
-    data_init = json.load(f)
+data_init = data  # Réutilise le fichier déjà chargé
+
 
 
 # Préparation des variables de session à partir du fichier
