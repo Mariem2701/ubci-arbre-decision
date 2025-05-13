@@ -53,6 +53,12 @@ else:
         st.error("❌ Lien invalide ou session expirée.")
         st.stop()
 
+# Stockage initial pour intitule/description
+data_init = {}
+with open(f"data/{session_id}.json", "r") as f:
+    data_init = json.load(f)
+
+
 # Préparation des variables de session à partir du fichier
 if 'question_number' not in st.session_state:
     st.session_state.question_number = data.get("question_number", 1)
