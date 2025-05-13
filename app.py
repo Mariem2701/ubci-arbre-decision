@@ -218,7 +218,11 @@ st.markdown(f"**📌 Intitulé :** {data_init.get('intitule', 'Non renseigné')}
 if data_init.get("description"):
     st.markdown(f"**🗒️ Description :** {data_init.get('description')}")
 
+if "question_number" not in st.session_state:
+    st.session_state.question_number = data_init.get("question_number", 1)
 
+if "history" not in st.session_state:
+    st.session_state.history = data_init.get("history", [])
 
 # Question 1
 if st.session_state.question_number == 1:
