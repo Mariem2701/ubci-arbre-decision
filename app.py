@@ -1,30 +1,5 @@
-import streamlit as st
+iimport streamlit as st
 from PIL import Image
-import os
-import uuid
-import json
-
-
-def get_google_sheet():
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
-    client = gspread.authorize(creds)
-    return client.open("ubci_decision_data").sheet1
-
-sheet = get_google_sheet()
-
-
-# Services disponibles
-services = [
-    "Demandeur",
-    "Comptabilité des immobilisations",
-    "Fournisseurs / Comptabilité",
-    "Achats",
-    "Contrôle de gestion",
-    "IT / Juridique",
-    "Services Généraux",
-    "RH"
-]
 
 # Configuration de la page
 st.set_page_config(page_title="UBCI - Arbre de Décision Immobilisation", layout="centered")
@@ -41,18 +16,11 @@ st.markdown("Bienvenue dans l'outil interactif d’aide à la décision pour la 
 
 service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services)
 
-# Initialisation sécurisée de session_state
-if 'history' not in st.session_state:
-    st.session_state.history = []
-if 'question_number' not in st.session_state:
-    st.session_state.question_number = 1
-
 # Vérification de l'ID de session dans l'URL
-query_params = st.query_params
+query_params = st.experimental_get_query_params()
 session_id = query_params.get("id", [None])[0]
-data_init = {}
 
-# Création d'une nouvelle session
+# Création d'une nouvelle session (par Comptabilité des immo)
 if not session_id:
     if service_connecte == "Comptabilité des immobilisations":
         st.header("Créer une nouvelle demande")
@@ -70,28 +38,55 @@ if not session_id:
             with open(f"data/{session_id}.json", "w") as f:
                 json.dump(data, f)
             st.success("✅ Demande créée !")
-            st.markdown("🔗 Voici le lien à partager :")
+            st.markdown(f"🔗 Voici le lien à partager :")
             st.code(f"?id={session_id}")
             st.stop()
     else:
         st.error("❌ Aucun ID de session fourni. Veuillez demander un lien à la comptabilité.")
         st.stop()
 else:
-    filepath = f"data/{session_id}.json"
-    if os.path.exists(filepath):
-        with open(filepath, "r") as f:
+    # Chargement de la session existante
+    try:
+        with open(f"data/{session_id}.json", "r") as f:
             data = json.load(f)
-        data_init.update(data)
-        st.session_state.question_number = data.get("question_number", 1)
-        st.session_state.history = data.get("history", [])
-    else:
+    except FileNotFoundError:
         st.error("❌ Lien invalide ou session expirée.")
         st.stop()
 
-# Fonction pour réinitialiser
-st.sidebar.button("🔄 Réinitialiser", on_click=lambda: (st.session_state.update({"question_number": 1, "history": []})))
+# Stockage initial pour intitule/description
+data_init = {}
+with open(f"data/{session_id}.json", "r") as f:
+    data_init = json.load(f)
 
 
+# Préparation des variables de session à partir du fichier
+if 'question_number' not in st.session_state:
+    st.session_state.question_number = data.get("question_number", 1)
+if 'history' not in st.session_state:
+    st.session_state.history = data.get("history", [])
+
+
+# Bouton réinitialisation
+def reset():
+    st.session_state.question_number = 1
+    st.session_state.history = []
+
+st.sidebar.button("🔄 Réinitialiser", on_click=reset)
+
+# Services disponibles
+services = [
+    "Demandeur",
+    "Comptabilité des immobilisations",
+    "Fournisseurs / Comptabilité",
+    "Achats",
+    "Contrôle de gestion",
+    "IT / Juridique",
+    "Services Généraux",
+    "RH"
+]
+service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services)
+
+# Navigation
 def next_question():
     st.session_state.question_number += 1
 
@@ -108,18 +103,63 @@ def sauvegarder():
     with open(f"data/{session_id}.json", "w") as f:
         json.dump(data, f)
 
-   if st.session_state.history:
-        last_qid, last_rep = st.session_state.history[-1]
-        enregistrer_reponse(
-            session_id,
-            data.get("intitule", ""),
-            data.get("description", ""),
-            service_connecte,
-            last_qid,
-            last_rep
-        )
 
+# Services responsables
+services_responsables = {
+    1: "Demandeur",
+    2: "Comptabilité des immobilisations",
+    3: "Demandeur",
+    4: "Contrôle de gestion",
+    5: "Contrôle de gestion",
+    6: "Achats",
+    7: "Demandeur",
+    8: "Comptabilité des immobilisations",
+    9: "Achats",
+    10: "Comptabilité des immobilisations",
+    11: "IT / Juridique",
+    12: "Comptabilité des immobilisations",
+    13: "Services Généraux",
+    14: "Services Généraux",
+    15: "Comptabilité des immobilisations",
+    16: "Demandeur",
+    17: "Contrôle de gestion",
+    18: "Contrôle de gestion",
+    19: "Comptabilité des immobilisations",
+    20: "IT / Juridique",
+    21: "IT",
+    22: "IT / Juridique",
+    23: "Achats",
+    24: "Comptabilité des fournisseurs",
+    25: "Comptabilité des immobilisations",
+    26: "IT / Juridique",
+    30: "IT",
+    31: "Comptabilité des fournisseurs",
+    32: "IT",
+    33: "IT",
+    34: "IT",
+}
 
+# Fonction pour afficher le service responsable
+def afficher_service(question_num):
+    service = services_responsables.get(question_num)
+    if service:
+        st.markdown(f"👤 **Service concerné :** {service}")
+
+# Fonction d'affichage conditionnelle
+def afficher_question(num, titre, texte, options, key_radio, bouton_key, suite_callback):
+    service_responsable = services_responsables.get(num)
+    if service_connecte == service_responsable or service_connecte == "Comptabilité des immobilisations":
+        st.markdown("---")
+        st.subheader(titre)
+        afficher_service(num)
+        choix = st.radio(texte, options, key=key_radio)
+        if st.button("➡️ Suivant", key=bouton_key):
+            st.session_state.history.append((f"Q{num}", choix))
+            suite_callback(choix)
+    else:
+        st.warning("⛔ Cette question ne concerne pas votre service.")
+
+# Mapping des libellés de questions (sans numérotation)
 libelles_questions = {
     1: "La dépense est-elle supérieure à 500 DT ?",
     2: "La dépense concerne-t-elle un bien physique et tangible ?",
@@ -154,11 +194,7 @@ libelles_questions = {
     34: "Cette dépense est-elle nécessaire pour rendre l’actif opérationnel ?",
 }
 
-# Affichage des données
-st.markdown("## 📝 Demande en cours")
-st.markdown(f"**📌 Intitulé :** {data_init.get('intitule', 'Non renseigné')}")
-if data_init.get("description"):
-    st.markdown(f"**🗒️ Description :** {data_init.get('description')}")
+
 
 # Historique visible uniquement par SCI
 if service_connecte == "Comptabilité des immobilisations" and st.session_state.history:
