@@ -4,6 +4,16 @@ import os
 import uuid
 import json
 
+
+def get_google_sheet():
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+    client = gspread.authorize(creds)
+    return client.open("ubci_decision_data").sheet1
+
+sheet = get_google_sheet()
+
+
 # Services disponibles
 services = [
     "Demandeur",
@@ -31,10 +41,15 @@ st.markdown("Bienvenue dans l'outil interactif d’aide à la décision pour la 
 
 service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services)
 
+# Initialisation sécurisée de session_state
+if 'history' not in st.session_state:
+    st.session_state.history = []
+if 'question_number' not in st.session_state:
+    st.session_state.question_number = 1
+
 # Vérification de l'ID de session dans l'URL
 query_params = st.query_params
 session_id = query_params.get("id", [None])[0]
-
 data_init = {}
 
 # Création d'une nouvelle session
@@ -67,19 +82,15 @@ else:
         with open(filepath, "r") as f:
             data = json.load(f)
         data_init.update(data)
-        if 'question_number' not in st.session_state:
-            st.session_state.question_number = data.get("question_number", 1)
-        if 'history' not in st.session_state:
-            st.session_state.history = data.get("history", [])
+        st.session_state.question_number = data.get("question_number", 1)
+        st.session_state.history = data.get("history", [])
     else:
         st.error("❌ Lien invalide ou session expirée.")
         st.stop()
 
-def reset():
-    st.session_state.question_number = 1
-    st.session_state.history = []
+# Fonction pour réinitialiser
+st.sidebar.button("🔄 Réinitialiser", on_click=lambda: (st.session_state.update({"question_number": 1, "history": []})))
 
-st.sidebar.button("🔄 Réinitialiser", on_click=reset)
 
 def next_question():
     st.session_state.question_number += 1
@@ -96,6 +107,18 @@ def sauvegarder():
     }
     with open(f"data/{session_id}.json", "w") as f:
         json.dump(data, f)
+
+   if st.session_state.history:
+        last_qid, last_rep = st.session_state.history[-1]
+        enregistrer_reponse(
+            session_id,
+            data.get("intitule", ""),
+            data.get("description", ""),
+            service_connecte,
+            last_qid,
+            last_rep
+        )
+
 
 libelles_questions = {
     1: "La dépense est-elle supérieure à 500 DT ?",
@@ -520,7 +543,20 @@ elif st.session_state.question_number == 34:
 if service_connecte == "Comptabilité des immobilisations" and "history" in st.session_state:
     if st.session_state.history:
         st.markdown("### 📚 Historique des réponses")
+
+
+def enregistrer_reponse(session_id, intitule, description, service, question_id, reponse):
+    horodatage = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ligne = [session_id, intitule, description, service, question_id, reponse, horodatage]
+    try:
+        sheet.append_row(ligne)
+    except Exception as e:
+        st.error(f"Erreur lors de l'enregistrement dans Google Sheets : {e}")
+
         for qid, rep in st.session_state.history:
+            qnum = int(qid.replace("Q", ""))
+            libelle = libelles_questions.get(qnum, f"Question {qnum}")
+            st.markdown(f"- **{libelle}** → **{rep}**") 
             qnum = int(qid.replace("Q", ""))
             libelle = libelles_questions.get(qnum, f"Question {qnum}")
             st.markdown(f"- **{libelle}** → **{rep}**")
