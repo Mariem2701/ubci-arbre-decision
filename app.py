@@ -1,10 +1,8 @@
 import streamlit as st
-import json
 from PIL import Image
-
-# Configuration de la page
-st.set_page_config(page_title="UBCI - Arbre de Décision Immobilisation", layout="centered")
-
+import os
+import uuid
+import json
 
 # Services disponibles
 services = [
@@ -18,6 +16,8 @@ services = [
     "RH"
 ]
 
+# Configuration de la page
+st.set_page_config(page_title="UBCI - Arbre de Décision Immobilisation", layout="centered")
 
 # Affichage du logo
 try:
@@ -35,7 +35,9 @@ service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services
 query_params = st.query_params
 session_id = query_params.get("id", [None])[0]
 
-# Création d'une nouvelle session (par Comptabilité des immo)
+data_init = {}
+
+# Création d'une nouvelle session
 if not session_id:
     if service_connecte == "Comptabilité des immobilisations":
         st.header("Créer une nouvelle demande")
@@ -53,43 +55,32 @@ if not session_id:
             with open(f"data/{session_id}.json", "w") as f:
                 json.dump(data, f)
             st.success("✅ Demande créée !")
-            st.markdown(f"🔗 Voici le lien à partager :")
+            st.markdown("🔗 Voici le lien à partager :")
             st.code(f"?id={session_id}")
             st.stop()
     else:
         st.error("❌ Aucun ID de session fourni. Veuillez demander un lien à la comptabilité.")
         st.stop()
 else:
-    # Chargement de la session existante
-    try:
-        with open(f"data/{session_id}.json", "r") as f:
+    filepath = f"data/{session_id}.json"
+    if os.path.exists(filepath):
+        with open(filepath, "r") as f:
             data = json.load(f)
-    except FileNotFoundError:
+        data_init.update(data)
+        if 'question_number' not in st.session_state:
+            st.session_state.question_number = data.get("question_number", 1)
+        if 'history' not in st.session_state:
+            st.session_state.history = data.get("history", [])
+    else:
         st.error("❌ Lien invalide ou session expirée.")
         st.stop()
 
-# Stockage initial pour intitule/description
-data_init = {}
-with open(f"data/{session_id}.json", "r") as f:
-    data_init = json.load(f)
-
-
-# Préparation des variables de session à partir du fichier
-if 'question_number' not in st.session_state:
-    st.session_state.question_number = data.get("question_number", 1)
-if 'history' not in st.session_state:
-    st.session_state.history = data.get("history", [])
-
-
-# Bouton réinitialisation
 def reset():
     st.session_state.question_number = 1
     st.session_state.history = []
 
 st.sidebar.button("🔄 Réinitialiser", on_click=reset)
 
-
-# Navigation
 def next_question():
     st.session_state.question_number += 1
 
@@ -106,63 +97,6 @@ def sauvegarder():
     with open(f"data/{session_id}.json", "w") as f:
         json.dump(data, f)
 
-
-# Services responsables
-services_responsables = {
-    1: "Demandeur",
-    2: "Comptabilité des immobilisations",
-    3: "Demandeur",
-    4: "Contrôle de gestion",
-    5: "Contrôle de gestion",
-    6: "Achats",
-    7: "Demandeur",
-    8: "Comptabilité des immobilisations",
-    9: "Achats",
-    10: "Comptabilité des immobilisations",
-    11: "IT / Juridique",
-    12: "Comptabilité des immobilisations",
-    13: "Services Généraux",
-    14: "Services Généraux",
-    15: "Comptabilité des immobilisations",
-    16: "Demandeur",
-    17: "Contrôle de gestion",
-    18: "Contrôle de gestion",
-    19: "Comptabilité des immobilisations",
-    20: "IT / Juridique",
-    21: "IT",
-    22: "IT / Juridique",
-    23: "Achats",
-    24: "Comptabilité des fournisseurs",
-    25: "Comptabilité des immobilisations",
-    26: "IT / Juridique",
-    30: "IT",
-    31: "Comptabilité des fournisseurs",
-    32: "IT",
-    33: "IT",
-    34: "IT",
-}
-
-# Fonction pour afficher le service responsable
-def afficher_service(question_num):
-    service = services_responsables.get(question_num)
-    if service:
-        st.markdown(f"👤 **Service concerné :** {service}")
-
-# Fonction d'affichage conditionnelle
-def afficher_question(num, titre, texte, options, key_radio, bouton_key, suite_callback):
-    service_responsable = services_responsables.get(num)
-    if service_connecte == service_responsable or service_connecte == "Comptabilité des immobilisations":
-        st.markdown("---")
-        st.subheader(titre)
-        afficher_service(num)
-        choix = st.radio(texte, options, key=key_radio)
-        if st.button("➡️ Suivant", key=bouton_key):
-            st.session_state.history.append((f"Q{num}", choix))
-            suite_callback(choix)
-    else:
-        st.warning("⛔ Cette question ne concerne pas votre service.")
-
-# Mapping des libellés de questions (sans numérotation)
 libelles_questions = {
     1: "La dépense est-elle supérieure à 500 DT ?",
     2: "La dépense concerne-t-elle un bien physique et tangible ?",
@@ -197,240 +131,288 @@ libelles_questions = {
     34: "Cette dépense est-elle nécessaire pour rendre l’actif opérationnel ?",
 }
 
-# Affichage historique si "Comptabilité des immobilisations"
-if service_connecte == "Comptabilité des immobilisations":
-    with st.expander("📋 Suivi de l’avancement des réponses"):
-        for question_key, reponse in st.session_state.history:
-            num = int(question_key.replace("Q", ""))
-            texte = libelles_questions.get(num, f"Question {num}")
-            st.markdown(f"**{texte}**\n➡️ Réponse : {reponse}")
+# Affichage des données
+st.markdown("## 📝 Demande en cours")
+st.markdown(f"**📌 Intitulé :** {data_init.get('intitule', 'Non renseigné')}")
+if data_init.get("description"):
+    st.markdown(f"**🗒️ Description :** {data_init.get('description')}")
+
+# Historique visible uniquement par SCI
+if service_connecte == "Comptabilité des immobilisations" and st.session_state.history:
+    st.markdown("### 📚 Historique des réponses")
+    for qid, rep in st.session_state.history:
+        qnum = int(qid.replace("Q", ""))
+        libelle = libelles_questions.get(qnum, f"Question {qnum}")
+        st.markdown(f"- **{libelle}** → **{rep}**")
 
 
-# Question 1
-if st.session_state.question_number == 1:
-    def suite_q1(choix):
-        if choix == "Oui":
-            next_question()
-        else:
-            st.success("✅ Conclusion : Cette dépense est comptabilisée en **Charge**.")
-    afficher_question(1, "1️⃣ La dépense est-elle supérieure à 500 DT ?", "Réponse :", ["Oui", "Non"], "q1", "b1", suite_q1)
-
-# Question 2
 elif st.session_state.question_number == 2:
-    def suite_q2(choix):
-        if choix == "Oui":
-            next_question()
-        else:
-            go_to_question(15)
-    afficher_question(2, "2️⃣ La dépense concerne-t-elle un bien physique et tangible ?", "Réponse :", ["Oui", "Non"], "q2", "b2", suite_q2)
+    def suite_q02(choix):
+        st.session_state.history.append(("Q2", choix))
+        sauvegarder()
+        go_to_question(15) if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("2️⃣ La dépense concerne-t-elle un bien physique et tangible ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q2")
+    if st.button("➡️ Suivant", key="b2"):
+        suite_q02(choix)
 
 elif st.session_state.question_number == 3:
-    def suite_q3(choix):
-        if choix == "Oui":
-            next_question()
-        else:
-            st.success("✅ Conclusion : **Charge**")
-    afficher_question(3, "3️⃣ Est-il destiné à être utilisé pour plus d'un exercice (> 1 an) ?", "Réponse :", ["Oui", "Non"], "q3", "b3", suite_q3)
+    def suite_q03(choix):
+        st.session_state.history.append(("Q3", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Charge") if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("3️⃣ Est-il destiné à être utilisé pour plus d'un exercice (> 1 an) ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q3")
+    if st.button("➡️ Suivant", key="b3"):
+        suite_q03(choix)
 
 elif st.session_state.question_number == 4:
-    def suite_q4(choix):
-        if choix == "Oui":
-            next_question()
-        else:
-            st.success("✅ Conclusion : **Charge**")
-    afficher_question(4, "4️⃣ L'entreprise bénéficie-t-elle des avantages économiques futurs du bien ?", "Réponse :", ["Oui", "Non"], "q4", "b4", suite_q4)
+    def suite_q04(choix):
+        st.session_state.history.append(("Q4", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Charge") if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("4️⃣ L'entreprise bénéficie-t-elle des avantages économiques futurs du bien ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q4")
+    if st.button("➡️ Suivant", key="b4"):
+        suite_q04(choix)
 
 elif st.session_state.question_number == 5:
-    def suite_q5(choix):
-        if choix == "Oui":
-            next_question()
-        else:
-            st.success("✅ Conclusion : **Charge**")
-    afficher_question(5, "5️⃣ Le coût du bien peut-il être mesuré de manière fiable ?", "Réponse :", ["Oui", "Non"], "q5", "b5", suite_q5)
+    def suite_q05(choix):
+        st.session_state.history.append(("Q5", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Charge") if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("5️⃣ Le coût du bien peut-il être mesuré de manière fiable ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q5")
+    if st.button("➡️ Suivant", key="b5"):
+        suite_q05(choix)
 
 elif st.session_state.question_number == 6:
-    def suite_q6(choix):
-        if choix == "Oui":
-            next_question()
-        else:
-            st.success("✅ Conclusion : **Charge**")
-    afficher_question(6, "6️⃣ Les risques et produits sont-ils transférés à l'entreprise ?", "Réponse :", ["Oui", "Non"], "q6", "b6", suite_q6)
+    def suite_q06(choix):
+        st.session_state.history.append(("Q6", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Charge") if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("6️⃣ Les risques et produits sont-ils transférés à l'entreprise ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q6")
+    if st.button("➡️ Suivant", key="b6"):
+        suite_q06(choix)
 
 elif st.session_state.question_number == 7:
-    def suite_q7(choix):
-        if choix == "Oui":
-            next_question()
-        else:
-            go_to_question(9)
-    afficher_question(7, "7️⃣ La dépense correspond-elle à des frais d’étude ?", "Réponse :", ["Oui", "Non"], "q7", "b7", suite_q7)
+    def suite_q07(choix):
+        st.session_state.history.append(("Q7", choix))
+        sauvegarder()
+        go_to_question(9) if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("7️⃣ La dépense correspond-elle à des frais d’étude ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q7")
+    if st.button("➡️ Suivant", key="b7"):
+        suite_q07(choix)
 
 elif st.session_state.question_number == 8:
-    def suite_q8(choix):
-        if choix == "Oui":
-            st.success("✅ Conclusion : **Immobilisation corporelle**")
-        else:
-            st.success("✅ Conclusion : **Charge**")
-    afficher_question(8, "8️⃣ Les frais d’étude sont-ils directement liés à la constitution d’un actif durable ?", "Réponse :", ["Oui", "Non"], "q8", "b8", suite_q8)
+    def suite_q08(choix):
+        st.session_state.history.append(("Q8", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Immobilisation corporelle") if choix == "Oui" else st.success("✅ Conclusion : Charge")
+    st.markdown("---")
+    st.subheader("8️⃣ Les frais d’étude sont-ils directement liés à la constitution d’un actif durable ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q8")
+    if st.button("➡️ Suivant", key="b8"):
+        suite_q08(choix)
 
 elif st.session_state.question_number == 9:
-    def suite_q9(choix):
-        if choix == "Oui":
-            st.success("✅ Conclusion : **Immobilisation corporelle**")
-        else:
-            next_question()
-    afficher_question(9, "9️⃣ S'agit-il d'une nouvelle acquisition ?", "Réponse :", ["Oui", "Non"], "q9", "b9", suite_q9)
+    def suite_q09(choix):
+        st.session_state.history.append(("Q9", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Immobilisation corporelle") if choix == "Oui" else next_question()
+    st.markdown("---")
+    st.subheader("9️⃣ S'agit-il d'une nouvelle acquisition ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q9")
+    if st.button("➡️ Suivant", key="b9"):
+        suite_q09(choix)
 
-# Question 10
 elif st.session_state.question_number == 10:
     def suite_q10(choix):
-        if choix == "Oui":
-            next_question()
-        else:
-            st.success("✅ Conclusion : **Charge**")
-    afficher_question(10, "🔧 1️⃣0️⃣ La valeur vénale de la composante est-elle ≥ 1/4 de la valeur de l'actif ?", "Réponse :", ["Oui", "Non"], "q10", "b10", suite_q10)
+        st.session_state.history.append(("Q10", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Charge") if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("10️⃣ La valeur vénale de la composante est-elle ≥ 1/4 de la valeur de l'actif ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q10")
+    if st.button("➡️ Suivant", key="b10"):
+        suite_q10(choix)
 
-# Question 11
 elif st.session_state.question_number == 11:
     def suite_q11(choix):
-        if choix == "Oui":
-            next_question()
-        else:
-            st.success("✅ Conclusion : **Charge**")
-    afficher_question(11, "🔧 1️⃣1️⃣ L'actif initial est-il identifié dans SAP comme investissement ?", "Réponse :", ["Oui", "Non"], "q11", "b11", suite_q11)
+        st.session_state.history.append(("Q11", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Charge") if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("11️⃣ L'actif initial est-il identifié dans SAP comme investissement ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q11")
+    if st.button("➡️ Suivant", key="b11"):
+        suite_q11(choix)
 
-# Question 12
 elif st.session_state.question_number == 12:
     def suite_q12(choix):
-        if choix == "Oui":
-            next_question()
-        else:
-            st.success("✅ Conclusion : **Charge**")
-    afficher_question(12, "🔧 1️⃣2️⃣ Prolonge-t-il la durée de vie ou augmente-t-il la performance de l'actif ?", "Réponse :", ["Oui", "Non"], "q12", "b12", suite_q12)
+        st.session_state.history.append(("Q12", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Charge") if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("12️⃣ Prolonge-t-il la durée de vie ou augmente-t-il la performance de l'actif ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q12")
+    if st.button("➡️ Suivant", key="b12"):
+        suite_q12(choix)
 
-# Question 13
 elif st.session_state.question_number == 13:
     def suite_q13(choix):
-        if choix == "Réhabilitation majeure":
-            st.success("✅ Conclusion : **Immobilisation corporelle**")
-        else:
-            next_question()
-    afficher_question(13, "🔧 1️⃣3️⃣ S'agit-il d’une réparation ou réhabilitation majeure ?", "Réponse :", ["Réparation", "Réhabilitation majeure"], "q13", "b13", suite_q13)
+        st.session_state.history.append(("Q13", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Immobilisation corporelle") if choix == "Réhabilitation majeure" else next_question()
+    st.markdown("---")
+    st.subheader("13️⃣ S'agit-il d’une réparation ou réhabilitation majeure ?")
+    choix = st.radio("Réponse :", ['Réparation', 'Réhabilitation majeure'], key="q13")
+    if st.button("➡️ Suivant", key="b13"):
+        suite_q13(choix)
 
-# Question 14
 elif st.session_state.question_number == 14:
     def suite_q14(choix):
-        if choix == "Oui":
-            st.success("✅ Conclusion : **Immobilisation corporelle**")
-        else:
-            st.success("✅ Conclusion : **Charge**")
-    afficher_question(14, "🔧 1️⃣4️⃣ La réparation présente-t-elle un caractère cyclique ?", "Réponse :", ["Oui", "Non"], "q14", "b14", suite_q14)
+        st.session_state.history.append(("Q14", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Charge") if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("14️⃣ La réparation présente-t-elle un caractère cyclique ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q14")
+    if st.button("➡️ Suivant", key="b14"):
+        suite_q14(choix)
 
-# Question 15
 elif st.session_state.question_number == 15:
     def suite_q15(choix):
-        if choix == "Oui":
-            next_question()
-        else:
-            st.success("✅ Conclusion : **Charge**")
-    afficher_question(15, "1️⃣5️⃣ L’élément est-il identifiable ?", "(Peut-il être séparé ou découle-t-il de droits légaux ?)", ["Oui", "Non"], "q15", "b15", suite_q15)
+        st.session_state.history.append(("Q15", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Charge") if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("15️⃣ L’élément est-il identifiable ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q15")
+    if st.button("➡️ Suivant", key="b15"):
+        suite_q15(choix)
 
-# Question 16
 elif st.session_state.question_number == 16:
     def suite_q16(choix):
-        if choix == "Oui":
-            next_question()
-        else:
-            st.success("✅ Conclusion : **Charge**")
-    afficher_question(16, "1️⃣6️⃣ Est-il destiné à être utilisé pour plus d'un exercice (> 1 an) ?", "", ["Oui", "Non"], "q16", "b16", suite_q16)
+        st.session_state.history.append(("Q16", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Charge") if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("16️⃣ Est-il destiné à être utilisé pour plus d'un exercice (> 1 an) ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q16")
+    if st.button("➡️ Suivant", key="b16"):
+        suite_q16(choix)
 
-# Question 17
 elif st.session_state.question_number == 17:
     def suite_q17(choix):
-        if choix == "Oui":
-            next_question()
-        else:
-            st.success("✅ Conclusion : **Charge**")
-    afficher_question(17, "1️⃣7️⃣ L'entreprise contrôle-t-elle l'élément et en retire-t-elle des avantages économiques futurs probables ?", "", ["Oui", "Non"], "q17", "b17", suite_q17)
+        st.session_state.history.append(("Q17", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Charge") if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("17️⃣ L'entreprise contrôle-t-elle l'élément et en retire-t-elle des avantages économiques futurs probables ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q17")
+    if st.button("➡️ Suivant", key="b17"):
+        suite_q17(choix)
 
-# Question 18
 elif st.session_state.question_number == 18:
     def suite_q18(choix):
-        if choix == "Oui":
-            next_question()
-        else:
-            st.success("✅ Conclusion : **Charge**")
-    afficher_question(18, "1️⃣8️⃣ Le coût peut-il être mesuré de manière fiable ?", "", ["Oui", "Non"], "q18", "b18", suite_q18)
+        st.session_state.history.append(("Q18", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Charge") if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("18️⃣ Le coût peut-il être mesuré de manière fiable ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q18")
+    if st.button("➡️ Suivant", key="b18"):
+        suite_q18(choix)
 
-# Question 19
 elif st.session_state.question_number == 19:
     def suite_q19(choix):
-        if choix == "Acquisition":
-            go_to_question(20)
-        elif choix == "Création en interne":
-            go_to_question(25)
-        else:
-            go_to_question(30)
-    afficher_question(19, "1️⃣9️⃣ S'agit-il d'une acquisition, création en interne ou d'une dépense liée à un actif ?", "", ["Acquisition", "Création en interne", "Dépense liée à un actif"], "q19", "b19", suite_q19)
+        st.session_state.history.append(("Q19", choix))
+        sauvegarder()
+        go_to_question(20) if choix == "Acquisition" else (go_to_question(25) if choix == "Création en interne" else go_to_question(30))
+    st.markdown("---")
+    st.subheader("19️⃣ S'agit-il d'une acquisition, création en interne ou d'une dépense liée à un actif ?")
+    choix = st.radio("Réponse :", ['Acquisition', 'Création en interne', 'Dépense liée à un actif'], key="q19")
+    if st.button("➡️ Suivant", key="b19"):
+        suite_q19(choix)
 
-# Question 20
 elif st.session_state.question_number == 20:
     def suite_q20(choix):
-        if choix == "Oui":
-            next_question()
-        else:
-            st.success("✅ Conclusion : **Immobilisation incorporelle**")
-    afficher_question(20, "🔹 L'acquisition concerne-t-elle une licence ?", "", ["Oui", "Non"], "q20", "b20", suite_q20)
+        st.session_state.history.append(("Q20", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Immobilisation incorporelle") if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("20️⃣ L'acquisition concerne-t-elle une licence ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q20")
+    if st.button("➡️ Suivant", key="b20"):
+        suite_q20(choix)
 
-# Question 21
 elif st.session_state.question_number == 21:
     def suite_q21(choix):
-        if choix == "Oui":
-            next_question()
-        else:
-            st.success("✅ Conclusion : **Charge**")
-    afficher_question(21, "🔹 L'actif est-il hébergé sur une infrastructure contrôlée par l'entreprise ?", "", ["Oui", "Non"], "q21", "b21", suite_q21)
+        st.session_state.history.append(("Q21", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Charge") if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("21️⃣ L'actif est-il hébergé sur une infrastructure contrôlée par l'entreprise ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q21")
+    if st.button("➡️ Suivant", key="b21"):
+        suite_q21(choix)
 
-# Question 22
 elif st.session_state.question_number == 22:
     def suite_q22(choix):
-        if choix == "Oui":
-            next_question()
-        else:
-            st.success("✅ Conclusion : **Charge**")
-    afficher_question(22, "🔹 L’entreprise dispose-t-elle d’un droit d’usage distinct et exclusif de l'actif ?", "", ["Oui", "Non"], "q22", "b22", suite_q22)
+        st.session_state.history.append(("Q22", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Charge") if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("22️⃣ L’entreprise dispose-t-elle d’un droit d’usage distinct et exclusif de l'actif ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q22")
+    if st.button("➡️ Suivant", key="b22"):
+        suite_q22(choix)
 
-# Question 23
 elif st.session_state.question_number == 23:
     def suite_q23(choix):
-        if choix == "Oui":
-            next_question()
-        else:
-            st.success("✅ Conclusion : **Charge**")
-    afficher_question(23, "🔹 Le droit d’usage est-il permanent (licence perpétuelle) ou à long terme (≥ 3 ans) ?", "", ["Oui", "Non"], "q23", "b23", suite_q23)
+        st.session_state.history.append(("Q23", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Charge") if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("23️⃣ Le droit d’usage est-il permanent (licence perpétuelle) ou à long terme (≥ 3 ans) ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q23")
+    if st.button("➡️ Suivant", key="b23"):
+        suite_q23(choix)
 
-# Question 24
 elif st.session_state.question_number == 24:
     def suite_q24(choix):
-        if choix == "Oui":
-            st.success("✅ Conclusion : **Charge**")
-        else:
-            st.success("✅ Conclusion : **Immobilisation incorporelle**")
-    afficher_question(24, "🔹 Le contrat prévoit-il un abonnement/paiement récurrent ?", "", ["Oui", "Non"], "q24", "b24", suite_q24)
+        st.session_state.history.append(("Q24", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Charge") if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("24️⃣ Le contrat prévoit-il un abonnement/paiement récurrent ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q24")
+    if st.button("➡️ Suivant", key="b24"):
+        suite_q24(choix)
 
-# Question 25
 elif st.session_state.question_number == 25:
     def suite_q25(choix):
-        if choix == "Recherche":
-            st.success("✅ Conclusion : **Charge**")
-        else:
-            next_question()
-    afficher_question(25, "🧪 S'agit-il de dépenses de recherche ou de développement ?", "", ["Recherche", "Développement"], "q25", "b25", suite_q25)
+        st.session_state.history.append(("Q25", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Charge") if choix == "Recherche" else next_question()
+    st.markdown("---")
+    st.subheader("25️⃣ S'agit-il de dépenses de recherche ou de développement ?")
+    choix = st.radio("Réponse :", ['Recherche', 'Développement'], key="q25")
+    if st.button("➡️ Suivant", key="b25"):
+        suite_q25(choix)
 
-# Question 26
 elif st.session_state.question_number == 26:
-    if service_connecte == services_responsables.get(26) or service_connecte == "Comptabilité des immobilisations":
+    if service_connecte == "IT / Juridique" or service_connecte == "Comptabilité des immobilisations":
         st.subheader("🧪 Les conditions IAS 38.57 sont-elles toutes remplies ?")
-        afficher_service(26)
         conds = [
             st.checkbox("Faisabilité technique", key="cond1"),
             st.checkbox("Intention d’achever le projet", key="cond2"),
@@ -441,53 +423,96 @@ elif st.session_state.question_number == 26:
         ]
         if st.button("➡️ Suivant", key="b26"):
             if all(conds):
-                st.success("✅ Conclusion : **Immobilisation incorporelle**")
+                st.success("✅ Conclusion : Immobilisation incorporelle")
             else:
-                st.success("✅ Conclusion : **Charge**")
+                st.success("✅ Conclusion : Charge")
     else:
         st.warning("⛔ Cette question ne concerne pas votre service.")
 
-# Question 30
+elif st.session_state.question_number == 27:
+    def suite_q27(choix):
+        st.session_state.history.append(("Q27", choix))
+        sauvegarder()
+        next_question()
+    st.markdown("---")
+    st.subheader("27️⃣ Question 27")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q27")
+    if st.button("➡️ Suivant", key="b27"):
+        suite_q27(choix)
+
+elif st.session_state.question_number == 28:
+    def suite_q28(choix):
+        st.session_state.history.append(("Q28", choix))
+        sauvegarder()
+        next_question()
+    st.markdown("---")
+    st.subheader("28️⃣ Question 28")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q28")
+    if st.button("➡️ Suivant", key="b28"):
+        suite_q28(choix)
+
+elif st.session_state.question_number == 29:
+    def suite_q29(choix):
+        st.session_state.history.append(("Q29", choix))
+        sauvegarder()
+        next_question()
+    st.markdown("---")
+    st.subheader("29️⃣ Question 29")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q29")
+    if st.button("➡️ Suivant", key="b29"):
+        suite_q29(choix)
+
 elif st.session_state.question_number == 30:
     def suite_q30(choix):
-        if choix == "Oui":
-            go_to_question(32)
-        else:
-            go_to_question(31)
-    afficher_question(30, "🔧 S'agit-il d'une dépense de maintenance ?", "", ["Oui", "Non"], "q30", "b30", suite_q30)
+        st.session_state.history.append(("Q30", choix))
+        sauvegarder()
+        go_to_question(32) if choix == "Oui" else go_to_question(31)
+    st.markdown("---")
+    st.subheader("30️⃣ S'agit-il d'une dépense de maintenance ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q30")
+    if st.button("➡️ Suivant", key="b30"):
+        suite_q30(choix)
 
-# Question 31
 elif st.session_state.question_number == 31:
     def suite_q31(choix):
-        if choix == "Oui":
-            st.success("✅ Conclusion : **Immobilisation corporelle**")
-        else:
-            st.success("✅ Conclusion : **Charge**")
-    afficher_question(31, "🔧 La dépense est-elle directement attribuable à la préparation de l'actif ?", "", ["Oui", "Non"], "q31", "b31", suite_q31)
+        st.session_state.history.append(("Q31", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Charge") if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("31️⃣ La dépense est-elle directement attribuable à la préparation de l'actif ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q31")
+    if st.button("➡️ Suivant", key="b31"):
+        suite_q31(choix)
 
-# Question 32
 elif st.session_state.question_number == 32:
     def suite_q32(choix):
-        if choix == "Avant":
-            go_to_question(34)
-        else:
-            go_to_question(33)
-    afficher_question(32, "🔧 La dépense est-elle réalisée avant ou après la mise en service de l’actif ?", "", ["Avant", "Après"], "q32", "b32", suite_q32)
+        st.session_state.history.append(("Q32", choix))
+        sauvegarder()
+        go_to_question(34) if choix == "Avant" else go_to_question(33)
+    st.markdown("---")
+    st.subheader("32️⃣ La dépense est-elle réalisée avant ou après la mise en service de l’actif ?")
+    choix = st.radio("Réponse :", ['Avant', 'Après'], key="q32")
+    if st.button("➡️ Suivant", key="b32"):
+        suite_q32(choix)
 
-# Question 33
 elif st.session_state.question_number == 33:
     def suite_q33(choix):
-        if choix == "Évolutive":
-            st.success("✅ Conclusion : **Immobilisation corporelle**")
-        else:
-            st.success("✅ Conclusion : **Charge**")
-    afficher_question(33, "🔧 La maintenance est-elle évolutive ou corrective ?", "", ["Évolutive", "Corrective"], "q33", "b33", suite_q33)
+        st.session_state.history.append(("Q33", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Immobilisation corporelle") if choix == "Évolutive" else st.success("✅ Conclusion : Charge")
+    st.markdown("---")
+    st.subheader("33️⃣ La maintenance est-elle évolutive ou corrective ?")
+    choix = st.radio("Réponse :", ['Évolutive', 'Corrective'], key="q33")
+    if st.button("➡️ Suivant", key="b33"):
+        suite_q33(choix)
 
-# Question 34
 elif st.session_state.question_number == 34:
     def suite_q34(choix):
-        if choix == "Oui":
-            st.success("✅ Conclusion : **Immobilisation corporelle**")
-        else:
-            st.success("✅ Conclusion : **Charge**")
-    afficher_question(34, "🔧 Cette dépense est-elle nécessaire pour rendre l’actif opérationnel ?", "", ["Oui", "Non"], "q34", "b34", suite_q34)
+        st.session_state.history.append(("Q34", choix))
+        sauvegarder()
+        st.success("✅ Conclusion : Charge") if choix == "Non" else next_question()
+    st.markdown("---")
+    st.subheader("34️⃣ Cette dépense est-elle nécessaire pour rendre l’actif opérationnel ?")
+    choix = st.radio("Réponse :", ['Oui', 'Non'], key="q34")
+    if st.button("➡️ Suivant", key="b34"):
+        suite_q34(choix)
