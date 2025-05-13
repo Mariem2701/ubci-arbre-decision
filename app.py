@@ -3,6 +3,11 @@ from PIL import Image
 
 # Configuration de la page
 st.set_page_config(page_title="UBCI - Arbre de Décision Immobilisation", layout="centered")
+
+
+service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services)
+
+
 # Fonction pour afficher le service responsable
 def afficher_service(question_num):
     service = services_responsables.get(question_num)
@@ -18,7 +23,7 @@ except FileNotFoundError:
 st.title("🔍 Arbre de Décision - Traitement des Dépenses (Banque UBCI)")
 st.markdown("Bienvenue dans l'outil interactif d’aide à la décision pour la classification des dépenses selon les normes de la Banque **UBCI**.")
 
-service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services)
+
 
 # Vérification de l'ID de session dans l'URL
 query_params = st.experimental_get_query_params()
