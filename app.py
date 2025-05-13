@@ -69,18 +69,18 @@ else:
     if os.path.exists(filepath):
         with open(filepath, "r") as f:
             data = json.load(f)
+
         # Stockage initial pour intitule/description
-        data_init = data  # Réutilise le fichier déjà chargé
+        data_init = data
+
+        # Préparation des variables de session à partir du fichier
+        if 'question_number' not in st.session_state:
+            st.session_state.question_number = data.get("question_number", 1)
+        if 'history' not in st.session_state:
+            st.session_state.history = data.get("history", [])
     else:
         st.error("❌ Lien invalide ou session expirée.")
         st.stop()
-
-
-# Préparation des variables de session à partir du fichier
-if 'question_number' not in st.session_state:
-    st.session_state.question_number = data.get("question_number", 1)
-if 'history' not in st.session_state:
-    st.session_state.history = data.get("history", [])
 
 
 # Bouton réinitialisation
