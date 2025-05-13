@@ -525,10 +525,3 @@ if service_connecte == "Comptabilité des immobilisations" and "history" in st.s
             libelle = libelles_questions.get(qnum, f"Question {qnum}")
             st.markdown(f"- **{libelle}** → **{rep}**")
 
-AttributeError: This app has encountered an error. The original error message is redacted to prevent data leaks. Full error details have been recorded in the logs (if you're on Streamlit Cloud, click on 'Manage app' in the lower right of your app).
-Traceback:
-File "/mount/src/ubci-arbre-decision/app.py", line 141, in <module>
-    if service_connecte == "Comptabilité des immobilisations" and st.session_state.history:
-                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^
-File "/home/adminuser/venv/lib/python3.12/site-packages/streamlit/runtime/state/session_state_proxy.py", line 132, in __getattr__
-    raise AttributeError(_missing_attr_error_message(key))
