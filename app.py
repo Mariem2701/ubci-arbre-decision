@@ -108,6 +108,18 @@ def sauvegarder():
     with open(f"data/{session_id}.json", "w") as f:
         json.dump(data, f)
 
+   if st.session_state.history:
+        last_qid, last_rep = st.session_state.history[-1]
+        enregistrer_reponse(
+            session_id,
+            data.get("intitule", ""),
+            data.get("description", ""),
+            service_connecte,
+            last_qid,
+            last_rep
+        )
+
+
 libelles_questions = {
     1: "La dépense est-elle supérieure à 500 DT ?",
     2: "La dépense concerne-t-elle un bien physique et tangible ?",
