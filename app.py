@@ -202,19 +202,19 @@ def afficher_question(num, titre, texte, options, key_radio, bouton_key, suite_c
         st.subheader(titre)
         afficher_service(num)
         choix = st.radio(texte, options, key=key_radio)
+        
         if st.button("➡️ Suivant", key=bouton_key):
-    st.session_state.history.append((f"Q{num}", choix))
+            st.session_state.history.append((f"Q{num}", choix))
 
-    # ⬇️ Enregistre dans un fichier JSON
-    enregistrer_fiche(
-        st.session_state.dossier_id,
-        st.session_state.intitule_depense,
-        st.session_state.description_depense,
-        st.session_state.history
-    )
+            # Enregistrement automatique
+            enregistrer_fiche(
+                st.session_state.dossier_id,
+                st.session_state.intitule_depense,
+                st.session_state.description_depense,
+                st.session_state.history
+            )
 
-    suite_callback(choix)
-
+            suite_callback(choix)
     else:
         st.warning("⛔ Cette question ne concerne pas votre service.")
 
