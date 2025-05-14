@@ -72,6 +72,7 @@ def next_question():
 
 def go_to_question(n):
     st.session_state.question_number = n
+
 def enregistrer_fiche(dossier_id, intitule, description, reponses):
     os.makedirs("data", exist_ok=True)
     with open(f"data/{dossier_id}.json", "w") as f:
@@ -195,8 +196,18 @@ def afficher_question(num, titre, texte, options, key_radio, bouton_key, suite_c
         afficher_service(num)
         choix = st.radio(texte, options, key=key_radio)
         if st.button("➡️ Suivant", key=bouton_key):
-            st.session_state.history.append((f"Q{num}", choix))
-            suite_callback(choix)
+    st.session_state.history.append((f"Q{num}", choix))
+
+    # ⬇️ Enregistre dans un fichier JSON
+    enregistrer_fiche(
+        st.session_state.dossier_id,
+        st.session_state.intitule_depense,
+        st.session_state.description_depense,
+        st.session_state.history
+    )
+
+    suite_callback(choix)
+
     else:
         st.warning("⛔ Cette question ne concerne pas votre service.")
 
