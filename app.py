@@ -91,8 +91,39 @@ def afficher_service(question_num):
 
 # Mapping des libellés de questions (sans numérotation)
 libelles_questions = {
-    ...
+    1: "La dépense est-elle supérieure à 500 DT ?",
+    2: "La dépense concerne-t-elle un bien physique et tangible ?",
+    3: "Est-il destiné à être utilisé pour plus d'un exercice (> 1 an) ?",
+    4: "L'entreprise bénéficie-t-elle des avantages économiques futurs du bien ?",
+    5: "Le coût du bien peut-il être mesuré de manière fiable ?",
+    6: "Les risques et produits sont-ils transférés à l'entreprise ?",
+    7: "La dépense correspond-elle à des frais d’étude ?",
+    8: "Les frais d’étude sont-ils directement liés à la constitution d’un actif durable ?",
+    9: "S'agit-il d'une nouvelle acquisition ?",
+    10: "La valeur vénale de la composante est-elle ≥ 1/4 de la valeur de l'actif ?",
+    11: "L'actif initial est-il identifié dans SAP comme investissement ?",
+    12: "Prolonge-t-il la durée de vie ou augmente-t-il la performance de l'actif ?",
+    13: "S'agit-il d’une réparation ou réhabilitation majeure ?",
+    14: "La réparation présente-t-elle un caractère cyclique ?",
+    15: "L’élément est-il identifiable ? (Peut-il être séparé ou découle-t-il de droits légaux ?)",
+    16: "Est-il destiné à être utilisé pour plus d'un exercice (> 1 an) ?",
+    17: "L'entreprise contrôle-t-elle l'élément et en retire-t-elle des avantages économiques futurs probables ?",
+    18: "Le coût peut-il être mesuré de manière fiable ?",
+    19: "S'agit-il d'une acquisition, création en interne ou d'une dépense liée à un actif ?",
+    20: "L'acquisition concerne-t-elle une licence ?",
+    21: "L'actif est-il hébergé sur une infrastructure contrôlée par l'entreprise ?",
+    22: "L’entreprise dispose-t-elle d’un droit d’usage distinct et exclusif de l'actif ?",
+    23: "Le droit d’usage est-il permanent (licence perpétuelle) ou à long terme (≥ 3 ans) ?",
+    24: "Le contrat prévoit-il un abonnement/paiement récurrent ?",
+    25: "S'agit-il de dépenses de recherche ou de développement ?",
+    26: "Les conditions IAS 38.57 sont-elles toutes remplies ?",
+    30: "S'agit-il d'une dépense de maintenance ?",
+    31: "La dépense est-elle directement attribuable à la préparation de l'actif ?",
+    32: "La dépense est-elle réalisée avant ou après la mise en service de l’actif ?",
+    33: "La maintenance est-elle évolutive ou corrective ?",
+    34: "Cette dépense est-elle nécessaire pour rendre l’actif opérationnel ?"
 }
+
 
 # Affichage historique si "Comptabilité des immobilisations":
 if service_connecte == "Comptabilité des immobilisations":
