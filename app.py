@@ -62,16 +62,40 @@ if 'description_depense' not in st.session_state:
 params = st.query_params
 dossier_id_param = params.get("dossier", [None])[0]
 
+# Fonction de lecture depuis Google Sheets
+def charger_depense_depuis_sheets(dossier_id):
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+    client = gspread.authorize(creds)
+    sheet = client.open("ubci_decision_data").sheet1
+    rows = sheet.get_all_records()
+
+    history = []
+    intitule = ""
+    description = ""
+
+    for row in rows:
+        if row["session_id"] == dossier_id:
+            if not intitule:
+                intitule = row["intitule"]
+                description = row["description"]
+            history.append((f"Q{row['question_id']}", row["reponse"]))
+
+    return intitule, description, history
+
+# Chargement des données si lien ?dossier=xxxx
 if dossier_id_param and 'dossier_id' not in st.session_state:
     st.session_state.dossier_id = dossier_id_param
     try:
-        with open(f"data/{dossier_id_param}.json") as f:
-            fiche = json.load(f)
-            st.session_state.intitule_depense = fiche["intitule"]
-            st.session_state.description_depense = fiche["description"]
-            st.session_state.history = fiche["reponses"]
-    except FileNotFoundError:
-        st.warning("❌ Dossier introuvable.")
+        intitule, description, history = charger_depense_depuis_sheets(dossier_id_param)
+        if not intitule:
+            st.warning("❌ Dossier introuvable.")
+            st.stop()
+        st.session_state.intitule_depense = intitule
+        st.session_state.description_depense = description
+        st.session_state.history = history
+    except Exception as e:
+        st.error(f"Erreur lors du chargement : {e}")
         st.stop()
 
 
