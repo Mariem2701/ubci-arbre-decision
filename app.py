@@ -146,7 +146,8 @@ if service_connecte == "Comptabilité des immobilisations" and st.session_state.
         st.stop()
 
     # Afficher lien à partager
-    st.markdown(f"🔗 **Lien à partager** : `{st.request.url}?dossier={st.session_state.dossier_id}`")
+    st.markdown("🔗 **Lien à partager :**")
+st.code(f"?dossier={st.session_state.dossier_id}", language="markdown")
 
 
 # Mapping des libellés de questions (sans numérotation)
