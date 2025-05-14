@@ -148,11 +148,6 @@ def afficher_question(num, titre, texte, options, key_radio, bouton_key, suite_c
     else:
         st.warning("⛔ Cette question ne concerne pas votre service.")
 
-# Affichage historique si "Comptabilité des immobilisations"
-if service_connecte == "Comptabilité des immobilisations":
-    with st.expander("📋 Suivi de l’avancement des réponses"):
-        for question, reponse in st.session_state.history:
-            st.markdown(f"**{question}** : {reponse}")
 
 
 # Question 1
