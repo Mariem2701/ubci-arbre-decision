@@ -404,4 +404,11 @@ elif st.session_state.question_number == 33:
 
         else:
             st.success("✅ Conclusion : **Charge**")
+  # Question 34
+elif st.session_state.question_number == 34:
+    def suite_q34(choix):
+        if choix == "Oui":
+            st.success("✅ Conclusion : **Immobilisation corporelle**")
+        else:
+            st.success("✅ Conclusion : **Charge**")
     afficher_question(34, "🔧 Cette dépense est-elle nécessaire pour rendre l’actif opérationnel ?", "", ["Oui", "Non"], "q34", "b34", suite_q34)
