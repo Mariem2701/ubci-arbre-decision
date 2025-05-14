@@ -147,10 +147,13 @@ if service_connecte == "Comptabilité des immobilisations" and st.session_state.
 
   
 # Afficher lien à partager si dossier_id existe
-if "dossier_id" in st.session_state:
-    st.markdown("🔗 **Lien à partager :**")
-    st.code(f"?dossier={st.session_state.dossier_id}", language="markdown")
+from streamlit_extras.copy_to_clipboard import copy_to_clipboard
 
+if "dossier_id" in st.session_state:
+    lien = f"{st.request.host}?dossier={st.session_state.dossier_id}" if hasattr(st, "request") else f"?dossier={st.session_state.dossier_id}"
+
+    st.markdown("🔗 **Lien à partager :**")
+    copy_to_clipboard(lien, "📋 Copier le lien", "✅ Lien copié !")
 
 
 # Mapping des libellés de questions (sans numérotation)
