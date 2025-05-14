@@ -145,9 +145,12 @@ if service_connecte == "Comptabilité des immobilisations" and st.session_state.
         st.warning("⚠️ Veuillez saisir l’intitulé de la dépense avant de continuer.")
         st.stop()
 
-    # Afficher lien à partager
+  
+# Afficher lien à partager si dossier_id existe
+if "dossier_id" in st.session_state:
     st.markdown("🔗 **Lien à partager :**")
-st.code(f"?dossier={st.session_state.dossier_id}", language="markdown")
+    st.code(f"?dossier={st.session_state.dossier_id}", language="markdown")
+
 
 
 # Mapping des libellés de questions (sans numérotation)
