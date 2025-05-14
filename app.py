@@ -1,5 +1,8 @@
 import streamlit as st
 from PIL import Image
+import uuid
+import os
+import json
 
 # Configuration de la page
 st.set_page_config(page_title="UBCI - Arbre de Décision Immobilisation", layout="centered")
@@ -25,6 +28,22 @@ if 'intitule_depense' not in st.session_state:
 
 if 'description_depense' not in st.session_state:
     st.session_state.description_depense = ""
+
+# Lire l'ID du dossier depuis l'URL si présent
+params = st.query_params
+dossier_id_param = params.get("dossier", [None])[0]
+
+if dossier_id_param and 'dossier_id' not in st.session_state:
+    st.session_state.dossier_id = dossier_id_param
+    try:
+        with open(f"data/{dossier_id_param}.json") as f:
+            fiche = json.load(f)
+            st.session_state.intitule_depense = fiche["intitule"]
+            st.session_state.description_depense = fiche["description"]
+            st.session_state.history = fiche["reponses"]
+    except FileNotFoundError:
+        st.warning("❌ Dossier introuvable.")
+        st.stop()
 
 
 # Bouton réinitialisation
@@ -53,6 +72,14 @@ def next_question():
 
 def go_to_question(n):
     st.session_state.question_number = n
+def enregistrer_fiche(dossier_id, intitule, description, reponses):
+    os.makedirs("data", exist_ok=True)
+    with open(f"data/{dossier_id}.json", "w") as f:
+        json.dump({
+            "intitule": intitule,
+            "description": description,
+            "reponses": reponses
+        }, f)
 
 # Services responsables
 services_responsables = {
@@ -96,14 +123,23 @@ def afficher_service(question_num):
     if service:
         st.markdown(f"👤 **Service concerné :** {service}")
 
-if st.session_state.question_number == 1 and service_connecte == "Comptabilité des immobilisations":
+if service_connecte == "Comptabilité des immobilisations" and st.session_state.question_number == 1:
     st.markdown("### 📝 Informations sur la dépense")
+
+    # Génère un ID unique une seule fois
+    if "dossier_id" not in st.session_state:
+        st.session_state.dossier_id = str(uuid.uuid4())[:6]
+
     st.session_state.intitule_depense = st.text_input("**Intitulé de la dépense** (obligatoire)", st.session_state.intitule_depense)
     st.session_state.description_depense = st.text_area("**Description** (facultatif)", st.session_state.description_depense)
 
     if not st.session_state.intitule_depense:
         st.warning("⚠️ Veuillez saisir l’intitulé de la dépense avant de continuer.")
         st.stop()
+
+    # Afficher lien à partager
+    st.markdown(f"🔗 **Lien à partager** : `{st.request.url}?dossier={st.session_state.dossier_id}`")
+
 
 # Mapping des libellés de questions (sans numérotation)
 libelles_questions = {
