@@ -147,13 +147,13 @@ if service_connecte == "Comptabilité des immobilisations" and st.session_state.
 
   
 # Afficher lien à partager si dossier_id existe
-from streamlit_extras.copy_to_clipboard import copy_to_clipboard
-
 if "dossier_id" in st.session_state:
-    lien = f"{st.request.host}?dossier={st.session_state.dossier_id}" if hasattr(st, "request") else f"?dossier={st.session_state.dossier_id}"
+    base_url = "https://ubci-arbre-decision.streamlit.app"
+    lien = f"{base_url}/?dossier={st.session_state.dossier_id}"
 
     st.markdown("🔗 **Lien à partager :**")
-    copy_to_clipboard(lien, "📋 Copier le lien", "✅ Lien copié !")
+    st.text_input("URL à copier", value=lien, label_visibility="collapsed")
+
 
 
 # Mapping des libellés de questions (sans numérotation)
