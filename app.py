@@ -401,10 +401,7 @@ elif st.session_state.question_number == 33:
             st.success("✅ Conclusion : **Charge**")
     afficher_question(33, "🔧 La maintenance est-elle évolutive ou corrective ?", "", ["Évolutive", "Corrective"], "q33", "b33", suite_q33)
 
-
-        else:
-            st.success("✅ Conclusion : **Charge**")
-  # Question 34
+      # Question 34
 elif st.session_state.question_number == 34:
     def suite_q34(choix):
         if choix == "Oui":
