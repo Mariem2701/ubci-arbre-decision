@@ -146,13 +146,14 @@ if service_connecte == "Comptabilité des immobilisations" and st.session_state.
         st.stop()
 
   
-# Afficher lien à partager si dossier_id existe
+# 📎 Afficher lien à partager si dossier_id existe
 if "dossier_id" in st.session_state:
-    base_url = "https://ubci-arbre-decision.streamlit.app"
+    base_url = "https://ubci-arbre-decision-nzgmblwykw3dwkekw2dzwt.streamlit.app"
     lien = f"{base_url}/?dossier={st.session_state.dossier_id}"
 
     st.markdown("🔗 **Lien à partager :**")
     st.text_input("URL à copier", value=lien, label_visibility="collapsed")
+
 
 
 
