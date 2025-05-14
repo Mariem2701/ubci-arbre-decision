@@ -222,12 +222,6 @@ def afficher_question(num, titre, texte, options, key_radio, bouton_key, suite_c
     else:
         st.warning("⛔ Cette question ne concerne pas votre service.")
 
-if st.session_state.intitule_depense:
-    with st.expander("📌 Dépense analysée", expanded=True):
-        st.markdown(f"**🔹 Intitulé :** {st.session_state.intitule_depense}")
-        if st.session_state.description_depense:
-            st.markdown(f"**🗒 Description :** {st.session_state.description_depense}")
-
 
 
 # Question 1
