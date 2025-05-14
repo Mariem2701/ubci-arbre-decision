@@ -1,21 +1,5 @@
 import streamlit as st
 from PIL import Image
-import os
-import uuid
-import json
-
-
-# Services disponibles
-services = [
-    "Demandeur",
-    "Comptabilité des immobilisations",
-    "Fournisseurs / Comptabilité",
-    "Achats",
-    "Contrôle de gestion",
-    "IT / Juridique",
-    "Services Généraux",
-    "RH"
-]
 
 # Configuration de la page
 st.set_page_config(page_title="UBCI - Arbre de Décision Immobilisation", layout="centered")
@@ -30,59 +14,11 @@ except FileNotFoundError:
 st.title("🔍 Arbre de Décision - Traitement des Dépenses (Banque UBCI)")
 st.markdown("Bienvenue dans l'outil interactif d’aide à la décision pour la classification des dépenses selon les normes de la Banque **UBCI**.")
 
-service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services)
-
-# Vérification de l'ID de session dans l'URL
-query_params = st.query_params
-session_id = query_params.get("id", [None])[0]
-
-data_init = {}  # Initialise toujours la variable, même si vide
-
-
-# Création d'une nouvelle session (par Comptabilité des immo)
-if not session_id:
-    if service_connecte == "Comptabilité des immobilisations":
-        st.header("Créer une nouvelle demande")
-        intitule = st.text_input("Intitulé de la dépense")
-        description = st.text_area("Description (optionnelle)")
-        if st.button("🎯 Créer la demande"):
-            session_id = str(uuid.uuid4())
-            data = {
-                "intitule": intitule,
-                "description": description,
-                "history": [],
-                "question_number": 1
-            }
-            os.makedirs("data", exist_ok=True)
-            with open(f"data/{session_id}.json", "w") as f:
-                json.dump(data, f)
-            st.success("✅ Demande créée !")
-            st.markdown(f"🔗 Voici le lien à partager :")
-            st.code(f"?id={session_id}")
-            st.stop()
-    else:
-        st.error("❌ Aucun ID de session fourni. Veuillez demander un lien à la comptabilité.")
-        st.stop()
-else:
-    # Chargement de la session existante (version robuste)
-    filepath = f"data/{session_id}.json"
-
-    if os.path.exists(filepath):
-        with open(filepath, "r") as f:
-            data = json.load(f)
-
-        # Stockage initial pour intitule/description
-        data_init.update(data)
-
-        # Préparation des variables de session à partir du fichier
-        if 'question_number' not in st.session_state:
-            st.session_state.question_number = data.get("question_number", 1)
-        if 'history' not in st.session_state:
-            st.session_state.history = data.get("history", [])
-    else:
-        st.error("❌ Lien invalide ou session expirée.")
-        st.stop()
-
+# Initialisation
+if 'question_number' not in st.session_state:
+    st.session_state.question_number = 1
+if 'history' not in st.session_state:
+    st.session_state.history = []
 
 # Bouton réinitialisation
 def reset():
@@ -102,6 +38,7 @@ services = [
     "Services Généraux",
     "RH"
 ]
+service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services)
 
 # Navigation
 def next_question():
@@ -109,17 +46,6 @@ def next_question():
 
 def go_to_question(n):
     st.session_state.question_number = n
-
-def sauvegarder():
-    data = {
-        "intitule": data_init.get("intitule", ""),
-        "description": data_init.get("description", ""),
-        "history": st.session_state.history,
-        "question_number": st.session_state.question_number
-    }
-    with open(f"data/{session_id}.json", "w") as f:
-        json.dump(data, f)
-
 
 # Services responsables
 services_responsables = {
@@ -156,11 +82,26 @@ services_responsables = {
     34: "IT",
 }
 
+
 # Fonction pour afficher le service responsable
 def afficher_service(question_num):
     service = services_responsables.get(question_num)
     if service:
         st.markdown(f"👤 **Service concerné :** {service}")
+
+# Mapping des libellés de questions (sans numérotation)
+libelles_questions = {
+    ...
+}
+
+# Affichage historique si "Comptabilité des immobilisations":
+if service_connecte == "Comptabilité des immobilisations":
+    with st.expander("📋 Suivi de l’avancement des réponses"):
+        for question_key, reponse in st.session_state.history:
+            num = int(question_key.replace("Q", ""))
+            texte = libelles_questions.get(num, f"Question {num}")
+            st.markdown(f"**{texte}**\n➡️ Réponse : `{reponse}`")
+
 
 # Fonction d'affichage conditionnelle
 def afficher_question(num, titre, texte, options, key_radio, bouton_key, suite_callback):
@@ -176,53 +117,12 @@ def afficher_question(num, titre, texte, options, key_radio, bouton_key, suite_c
     else:
         st.warning("⛔ Cette question ne concerne pas votre service.")
 
-# Mapping des libellés de questions (sans numérotation)
-libelles_questions = {
-    1: "La dépense est-elle supérieure à 500 DT ?",
-    2: "La dépense concerne-t-elle un bien physique et tangible ?",
-    3: "Est-il destiné à être utilisé pour plus d'un exercice (> 1 an) ?",
-    4: "L'entreprise bénéficie-t-elle des avantages économiques futurs du bien ?",
-    5: "Le coût du bien peut-il être mesuré de manière fiable ?",
-    6: "Les risques et produits sont-ils transférés à l'entreprise ?",
-    7: "La dépense correspond-elle à des frais d’étude ?",
-    8: "Les frais d’étude sont-ils directement liés à la constitution d’un actif durable ?",
-    9: "S'agit-il d'une nouvelle acquisition ?",
-    10: "La valeur vénale de la composante est-elle ≥ 1/4 de la valeur de l'actif ?",
-    11: "L'actif initial est-il identifié dans SAP comme investissement ?",
-    12: "Prolonge-t-il la durée de vie ou augmente-t-il la performance de l'actif ?",
-    13: "S'agit-il d’une réparation ou réhabilitation majeure ?",
-    14: "La réparation présente-t-elle un caractère cyclique ?",
-    15: "L’élément est-il identifiable ?",
-    16: "Est-il destiné à être utilisé pour plus d'un exercice (> 1 an) ?",
-    17: "L'entreprise contrôle-t-elle l'élément et en retire-t-elle des avantages économiques futurs probables ?",
-    18: "Le coût peut-il être mesuré de manière fiable ?",
-    19: "S'agit-il d'une acquisition, création en interne ou d'une dépense liée à un actif ?",
-    20: "L'acquisition concerne-t-elle une licence ?",
-    21: "L'actif est-il hébergé sur une infrastructure contrôlée par l'entreprise ?",
-    22: "L’entreprise dispose-t-elle d’un droit d’usage distinct et exclusif de l'actif ?",
-    23: "Le droit d’usage est-il permanent (licence perpétuelle) ou à long terme (≥ 3 ans) ?",
-    24: "Le contrat prévoit-il un abonnement/paiement récurrent ?",
-    25: "S'agit-il de dépenses de recherche ou de développement ?",
-    26: "Les conditions IAS 38.57 sont-elles toutes remplies ?",
-    30: "S'agit-il d'une dépense de maintenance ?",
-    31: "La dépense est-elle directement attribuable à la préparation de l'actif ?",
-    32: "La dépense est-elle réalisée avant ou après la mise en service de l’actif ?",
-    33: "La maintenance est-elle évolutive ou corrective ?",
-    34: "Cette dépense est-elle nécessaire pour rendre l’actif opérationnel ?",
-}
+# Affichage historique si "Comptabilité des immobilisations"
+if service_connecte == "Comptabilité des immobilisations":
+    with st.expander("📋 Suivi de l’avancement des réponses"):
+        for question, reponse in st.session_state.history:
+            st.markdown(f"**{question}** : {reponse}")
 
-# Affichage global des détails de la demande (intitulé + description)
-st.markdown("## 📝 Demande en cours")
-st.markdown(f"**📌 Intitulé :** {data_init.get('intitule', 'Non renseigné')}")
-
-if data_init.get("description"):
-    st.markdown(f"**🗒️ Description :** {data_init.get('description')}")
-
-if "question_number" not in st.session_state:
-    st.session_state.question_number = data_init.get("question_number", 1)
-
-if "history" not in st.session_state:
-    st.session_state.history = data_init.get("history", [])
 
 # Question 1
 if st.session_state.question_number == 1:
@@ -501,11 +401,7 @@ elif st.session_state.question_number == 33:
             st.success("✅ Conclusion : **Charge**")
     afficher_question(33, "🔧 La maintenance est-elle évolutive ou corrective ?", "", ["Évolutive", "Corrective"], "q33", "b33", suite_q33)
 
-# Question 34
-elif st.session_state.question_number == 34:
-    def suite_q34(choix):
-        if choix == "Oui":
-            st.success("✅ Conclusion : **Immobilisation corporelle**")
+
         else:
             st.success("✅ Conclusion : **Charge**")
     afficher_question(34, "🔧 Cette dépense est-elle nécessaire pour rendre l’actif opérationnel ?", "", ["Oui", "Non"], "q34", "b34", suite_q34)
