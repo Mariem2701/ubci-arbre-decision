@@ -5,20 +5,26 @@ import os
 import json
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+from datetime import datetime
 
-def enregistrer_dans_sheets(dossier_id, intitule, description, reponses):
+def enregistrer_dans_sheets(session_id, intitule, description, reponses, service):
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
     client = gspread.authorize(creds)
+    sheet = client.open("ubci_decision_data").sheet1
 
-    sheet = client.open("Réponses UBCI").sheet1
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    sheet.append_row([
-        dossier_id,
-        intitule,
-        description,
-        *[f"{q}:{r}" for q, r in reponses]
-    ])
+    for qid, reponse in reponses[-1:]:  # on ajoute seulement la dernière réponse
+        sheet.append_row([
+            session_id,
+            intitule,
+            description,
+            service,
+            qid.replace("Q", ""),
+            reponse,
+            now
+        ])
 
 # Configuration de la page
 st.set_page_config(page_title="UBCI - Arbre de Décision Immobilisation", layout="centered")
