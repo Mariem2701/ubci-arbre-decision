@@ -17,6 +17,13 @@ except FileNotFoundError:
 st.title("🔍 Arbre de Décision - Traitement des Dépenses (Banque UBCI)")
 st.markdown("Bienvenue dans l'outil interactif d’aide à la décision pour la classification des dépenses selon les normes de la Banque **UBCI**.")
 
+# Affichage du contexte de la dépense
+if "intitule_depense" in st.session_state:
+    with st.expander("📌 Dépense en cours", expanded=True):
+        st.markdown(f"**📝 Intitulé :** {st.session_state.intitule_depense}")
+        if st.session_state.description_depense:
+            st.markdown(f"**📄 Description :** {st.session_state.description_depense}")
+
 # Initialisation
 if 'question_number' not in st.session_state:
     st.session_state.question_number = 1
