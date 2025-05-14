@@ -244,12 +244,13 @@ def afficher_question(num, titre, texte, options, key_radio, bouton_key, suite_c
                 st.session_state.history
             )
 
-            # Enregistrement dans Google Sheets
+                      # Enregistrement dans Google Sheets
             enregistrer_dans_sheets(
                 st.session_state.dossier_id,
                 st.session_state.intitule_depense,
                 st.session_state.description_depense,
-                st.session_state.history
+                st.session_state.history,
+                service_connecte
             )
 
             suite_callback(choix)
