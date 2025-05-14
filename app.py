@@ -3,6 +3,22 @@ from PIL import Image
 import uuid
 import os
 import json
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+
+def enregistrer_dans_sheets(dossier_id, intitule, description, reponses):
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+    client = gspread.authorize(creds)
+
+    sheet = client.open("Réponses UBCI").sheet1
+
+    sheet.append_row([
+        dossier_id,
+        intitule,
+        description,
+        *[f"{q}:{r}" for q, r in reponses]
+    ])
 
 # Configuration de la page
 st.set_page_config(page_title="UBCI - Arbre de Décision Immobilisation", layout="centered")
