@@ -230,13 +230,21 @@ def afficher_question(num, titre, texte, options, key_radio, bouton_key, suite_c
         if st.button("➡️ Suivant", key=bouton_key):
             st.session_state.history.append((f"Q{num}", choix))
 
-            # Enregistrement automatique
-            enregistrer_fiche(
-                st.session_state.dossier_id,
-                st.session_state.intitule_depense,
-                st.session_state.description_depense,
-                st.session_state.history
-            )
+           # Enregistrer localement
+enregistrer_fiche(
+    st.session_state.dossier_id,
+    st.session_state.intitule_depense,
+    st.session_state.description_depense,
+    st.session_state.history
+)
+
+# Enregistrer dans Google Sheets
+enregistrer_dans_sheets(
+    st.session_state.dossier_id,
+    st.session_state.intitule_depense,
+    st.session_state.description_depense,
+    st.session_state.history
+)
 
             suite_callback(choix)
     else:
