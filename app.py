@@ -20,6 +20,13 @@ if 'question_number' not in st.session_state:
 if 'history' not in st.session_state:
     st.session_state.history = []
 
+if 'intitule_depense' not in st.session_state:
+    st.session_state.intitule_depense = ""
+
+if 'description_depense' not in st.session_state:
+    st.session_state.description_depense = ""
+
+
 # Bouton réinitialisation
 def reset():
     st.session_state.question_number = 1
@@ -89,6 +96,15 @@ def afficher_service(question_num):
     if service:
         st.markdown(f"👤 **Service concerné :** {service}")
 
+if st.session_state.question_number == 1 and service_connecte == "Comptabilité des immobilisations":
+    st.markdown("### 📝 Informations sur la dépense")
+    st.session_state.intitule_depense = st.text_input("**Intitulé de la dépense** (obligatoire)", st.session_state.intitule_depense)
+    st.session_state.description_depense = st.text_area("**Description** (facultatif)", st.session_state.description_depense)
+
+    if not st.session_state.intitule_depense:
+        st.warning("⚠️ Veuillez saisir l’intitulé de la dépense avant de continuer.")
+        st.stop()
+
 # Mapping des libellés de questions (sans numérotation)
 libelles_questions = {
     1: "La dépense est-elle supérieure à 500 DT ?",
@@ -147,6 +163,12 @@ def afficher_question(num, titre, texte, options, key_radio, bouton_key, suite_c
             suite_callback(choix)
     else:
         st.warning("⛔ Cette question ne concerne pas votre service.")
+
+if st.session_state.intitule_depense:
+    with st.expander("📌 Dépense analysée", expanded=True):
+        st.markdown(f"**🔹 Intitulé :** {st.session_state.intitule_depense}")
+        if st.session_state.description_depense:
+            st.markdown(f"**🗒 Description :** {st.session_state.description_depense}")
 
 
 
