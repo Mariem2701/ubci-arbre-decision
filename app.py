@@ -3,28 +3,9 @@ from PIL import Image
 import uuid
 import os
 import json
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 
-def enregistrer_dans_sheets(session_id, intitule, description, reponses, service):
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
-    client = gspread.authorize(creds)
-    sheet = client.open("ubci_decision_data").sheet1
 
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    for qid, reponse in reponses[-1:]:  # on ajoute seulement la dernière réponse
-        sheet.append_row([
-            session_id,
-            intitule,
-            description,
-            service,
-            qid.replace("Q", ""),
-            reponse,
-            now
-        ])
 
 # Configuration de la page
 st.set_page_config(page_title="UBCI - Arbre de Décision Immobilisation", layout="centered")
@@ -62,41 +43,8 @@ if 'description_depense' not in st.session_state:
 params = st.query_params
 dossier_id_param = params.get("dossier", [None])[0]
 
-# Fonction de lecture depuis Google Sheets
-def charger_depense_depuis_sheets(dossier_id):
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
-    client = gspread.authorize(creds)
-    sheet = client.open("ubci_decision_data").sheet1
-    rows = sheet.get_all_records()
 
-    history = []
-    intitule = ""
-    description = ""
 
-    for row in rows:
-        if row["session_id"] == dossier_id:
-            if not intitule:
-                intitule = row["intitule"]
-                description = row["description"]
-            history.append((f"Q{row['question_id']}", row["reponse"]))
-
-    return intitule, description, history
-
-# Chargement des données si lien ?dossier=xxxx
-if dossier_id_param and 'dossier_id' not in st.session_state:
-    st.session_state.dossier_id = dossier_id_param
-    try:
-        intitule, description, history = charger_depense_depuis_sheets(dossier_id_param)
-        if not intitule:
-            st.warning("❌ Dossier introuvable.")
-            st.stop()
-        st.session_state.intitule_depense = intitule
-        st.session_state.description_depense = description
-        st.session_state.history = history
-    except Exception as e:
-        st.error(f"Erreur lors du chargement : {e}")
-        st.stop()
 
 
 # Bouton réinitialisation
@@ -268,15 +216,7 @@ def afficher_question(num, titre, texte, options, key_radio, bouton_key, suite_c
                 st.session_state.history
             )
 
-                      # Enregistrement dans Google Sheets
-            enregistrer_dans_sheets(
-                st.session_state.dossier_id,
-                st.session_state.intitule_depense,
-                st.session_state.description_depense,
-                st.session_state.history,
-                service_connecte
-            )
-
+        
             suite_callback(choix)
     else:
         st.warning("⛔ Cette question ne concerne pas votre service.")
