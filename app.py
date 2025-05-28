@@ -67,6 +67,13 @@ services = [
 ]
 service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services)
 
+
+# Blocage si l'intitulé de dépense n'est pas encore fourni
+if service_connecte != "Comptabilité des immobilisations" and not st.session_state.intitule_depense:
+    st.error("⛔ L’outil est en attente de saisie de l’intitulé de la dépense par la Comptabilité des immobilisations.")
+    st.stop()
+
+
 # Navigation
 def next_question():
     st.session_state.question_number += 1
