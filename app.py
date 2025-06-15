@@ -69,29 +69,7 @@ if dossier_id_param and "dossier_id" not in st.session_state:
         st.warning("❌ Dossier introuvable.")
 
 
-# Charger un dossier existant si un paramètre "dossier" est passé dans l'URL
-if dossier_id_param:
-    chemin = f"data/{dossier_id_param}.json"
-    if os.path.exists(chemin):
-        with open(chemin, "r") as f:
-            data = json.load(f)
-            st.session_state.dossier_id = dossier_id_param
-            st.session_state.intitule_depense = data.get("intitule", "")
-            st.session_state.description_depense = data.get("description", "")
-            st.session_state.history = data.get("reponses", [])
 
-            # Déduire la prochaine question à poser (si possible)
-            if st.session_state.history:
-                last_question = st.session_state.history[-1][0]  # ex : "Q5"
-                try:
-                    last_num = int(last_question.replace("Q", ""))
-                    st.session_state.question_number = last_num + 1
-                except:
-                    st.session_state.question_number = 1
-            else:
-                st.session_state.question_number = 1
-    else:
-        st.warning("❌ Dossier introuvable.")
 
 
 
