@@ -42,9 +42,7 @@ if 'description_depense' not in st.session_state:
 # Lire l'ID du dossier depuis l'URL si présent
 params = st.query_params
 dossier_id_param = params.get("dossier", [None])[0]
-# Lire l'ID du dossier depuis l'URL si présent
-params = st.query_params
-dossier_id_param = params.get("dossier", [None])[0]
+
 
 # Charger un dossier existant si un paramètre "dossier" est passé dans l'URL
 if dossier_id_param and "dossier_id" not in st.session_state:
