@@ -44,6 +44,16 @@ params = st.query_params
 dossier_id_param = params.get("dossier", [None])[0]
 
 
+# Si un paramètre dossier est présent, charger les infos depuis le fichier JSON
+if dossier_id_param and "intitule_depense" not in st.session_state:
+    chemin = f"data/{dossier_id_param}.json"
+    if os.path.exists(chemin):
+        with open(chemin, "r") as f:
+            data = json.load(f)
+            st.session_state.intitule_depense = data.get("intitule", "")
+            st.session_state.description_depense = data.get("description", "")
+            st.session_state.history = data.get("reponses", [])
+            st.session_state.dossier_id = dossier_id_param
 
 
 
