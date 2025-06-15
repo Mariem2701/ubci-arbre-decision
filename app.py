@@ -95,8 +95,9 @@ service_connecte = st.sidebar.selectbox("👤 Connecté en tant que :", services
 # Blocage uniquement si aucun intitulé n’est présent, ni dans l’URL, ni dans le formulaire
 if not st.session_state.intitule_depense:
     if service_connecte != "Comptabilité des immobilisations":
-        st.error("⛔ L’outil est en attente de saisie de l’intitulé de la dépense par la Comptabilité des immobilisations.")
+        st.warning("⏳ Chargement de la dépense en cours ou en attente d'initialisation par la SCI...")
         st.stop()
+
 
 
 
