@@ -194,6 +194,13 @@ if service_connecte == "Comptabilité des immobilisations" and st.session_state.
     if not st.session_state.intitule_depense:
         st.warning("⚠️ Veuillez saisir l’intitulé de la dépense avant de continuer.")
         st.stop()
+    # Sauvegarde dès que l'intitulé est saisi
+    enregistrer_fiche(
+        st.session_state.dossier_id,
+        st.session_state.intitule_depense,
+        st.session_state.description_depense,
+        st.session_state.history
+    )
 
   
 # 📎 Afficher lien à partager si dossier_id existe
