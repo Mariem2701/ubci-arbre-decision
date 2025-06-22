@@ -13,7 +13,7 @@ st.set_page_config(page_title="UBCI - Arbre de Décision Immobilisation", layout
 # Affichage du logo
 try:
     logo = Image.open("./ubci_logo.png")
-    st.image(logo, width=350)
+    st.image(logo, width=300)
 except FileNotFoundError:
     st.warning("⚠️ Logo non trouvé. Vérifiez que 'ubci_logo.png' est bien dans le dossier du projet.")
 
