@@ -17,7 +17,7 @@ try:
 except FileNotFoundError:
     st.warning("⚠️ Logo non trouvé. Vérifiez que 'ubci_logo.png' est bien dans le dossier du projet.")
 
-st.title("Arbre de Décision - Traitement des Dépenses (Banque UBCI)")
+st.title("Arbre de Décision - Traitement des Dépenses ")
 
 
 # Affichage du contexte de la dépense
